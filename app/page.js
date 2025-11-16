@@ -50,7 +50,7 @@ export default function Home() {
 
       try {
         if (view === 'listings') {
-          const response = await fetch('/api/listings');
+          const response = await fetch('/api/get-listings');
           if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`API Error: ${response.status} - ${errorText}`);
