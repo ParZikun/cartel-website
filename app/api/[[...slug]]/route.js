@@ -1,30 +1,38 @@
 import { NextResponse } from 'next/server';
 
+// All requests to /api/* are proxied to the Azure backend
 export async function GET(request, { params }) {
   const slug = params.slug ? params.slug.join('/') : '';
-  const { search } = new URL(request.url); // Use search to get the full query string with '?'
+  const { search } = new URL(request.url);
   
-  // Fallback to localhost:5000 if API_URL is not set.
-  const apiUrl = `${process.env.API_URL || 'http://localhost:5000'}/api/${slug}${search}`;
+  const apiUrl = process.env.API_URL;
+  const apiKey = process.env.API_KEY;
+
+  if (!apiUrl) {
+    console.error('API_URL environment variable is not set.');
+    return new NextResponse('Internal Server Error: API configuration is missing.', { status: 500 });
+  }
+
+  const targetUrl = `${apiUrl}/${slug}${search}`;
 
   try {
-    const apiResponse = await fetch(apiUrl, {
+    const apiResponse = await fetch(targetUrl, {
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': process.env.API_KEY,
+        'X-API-Key': apiKey,
       },
     });
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
-      console.error(`API Error (${apiResponse.status}) from ${apiUrl}: ${errorText}`);
+      console.error(`API Error (${apiResponse.status}) from ${targetUrl}: ${errorText}`);
       return new NextResponse(errorText, { status: apiResponse.status, statusText: apiResponse.statusText });
     }
 
     const data = await apiResponse.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error(`Error forwarding request to ${apiUrl}:`, error);
-    return new NextResponse('Error forwarding request to backend API.', { status: 502 }); // 502 Bad Gateway is more appropriate
+    console.error(`Error forwarding request to ${targetUrl}:`, error);
+    return new NextResponse('Error forwarding request to backend API.', { status: 502 });
   }
 }
