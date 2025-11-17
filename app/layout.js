@@ -20,16 +20,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${pokemonHollow.variable} ${pokemonSolid.variable}`}>
       <body className="bg-gray-900">
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 ml-64">
-            <SolanaProvider>
-              <TransactionProvider>
+        <SolanaProvider>
+          <TransactionProvider>
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 ml-64">
                 {children}
-              </TransactionProvider>
-            </SolanaProvider>
-          </main>
-        </div>
+              </main>
+            </div>
+          </TransactionProvider>
+        </SolanaProvider>
       </body>
     </html>
   );

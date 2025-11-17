@@ -1,57 +1,70 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState('Status');
+  const [activeTab, setActiveTab] = useState('Listings');
+  const tabs = ['Listings', 'Status', 'Actions'];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'Listings':
-        return <div className="text-gray-400">Table of all listings goes here.</div>;
+        return (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">All Listings</h2>
+            <p className="text-gray-400">Table of all listings will go here.</p>
+          </div>
+        );
       case 'Status':
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                <h3 className="text-lg font-bold text-yellow-400">App Status</h3>
-                <p className="text-2xl text-green-400">Running</p>
+          <div>
+            <h2 className="text-2xl font-bold mb-4">System Status</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">App Status</h3>
+                <p className="text-green-400 font-bold">Running</p>
               </div>
-              <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                <h3 className="text-lg font-bold text-yellow-400">Last Scan</h3>
-                <p className="text-2xl text-gray-300">3 minutes ago</p>
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">Last Scan</h3>
+                <p className="text-gray-300">2 minutes ago</p>
               </div>
-              <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                <h3 className="text-lg font-bold text-yellow-400">Deal Count</h3>
-                <p className="text-2xl text-gray-300">1,284</p>
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">Deals Found</h3>
+                <p className="text-gray-300">12</p>
               </div>
             </div>
-            <div className="bg-black p-4 rounded-lg shadow-lg h-64 overflow-y-auto">
-              <h3 className="text-lg font-bold text-yellow-400 mb-2">Log Viewer</h3>
-              <pre className="text-green-400 text-sm font-mono">
-                <p>[INFO] 2023-10-27 10:00:00 - Application started successfully.</p>
-                <p>[INFO] 2023-10-27 10:00:05 - Scanning for new listings...</p>
-                <p>[DEBUG] 2023-10-27 10:00:10 - Found 5 new listings.</p>
-                <p>[WARN] 2023-10-27 10:00:15 - Listing XYZ has a suspicious price.</p>
-                <p>[INFO] 2023-10-27 10:00:20 - Scan complete. Found 2 deals.</p>
+            <h3 className="text-xl font-semibold mb-4">Log Viewer</h3>
+            <div className="bg-black p-4 rounded-lg">
+              <pre className="font-mono text-green-400 text-sm overflow-x-auto h-48">
+                <code>
+                  [2025-11-17 10:30:00] INFO: Application started successfully.<br />
+                  [2025-11-17 10:31:15] INFO: Scanning Magic Eden for new listings...<br />
+                  [2025-11-17 10:31:45] INFO: Found 5 new listings below floor price.<br />
+                  [2025-11-17 10:32:01] WARN: High slippage detected for mint XYZ.<br />
+                </code>
               </pre>
             </div>
           </div>
         );
       case 'Actions':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-lg font-bold text-yellow-400 mb-4">Maintenance Actions</h3>
-              <button className="w-full bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-600 transition duration-300">
-                Re-check Skipped Listings
-              </button>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-lg font-bold text-yellow-400 mb-4">Database Management</h3>
-              <button className="w-full bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition duration-300">
-                Full Database Sync
-              </button>
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Manual Actions</h2>
+            <div className="space-y-8">
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Re-check Skipped Listings</h3>
+                <p className="text-gray-400 mb-4">Force the application to re-evaluate listings that were previously skipped due to errors or other conditions.</p>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                  Run Re-check
+                </button>
+              </div>
+              <div className="bg-gray-700 p-6 rounded-lg border border-red-500/50">
+                <h3 className="text-xl font-semibold mb-4">Full Database Sync</h3>
+                <p className="text-gray-400 mb-4">Perform a full synchronization with the source data, potentially overwriting existing entries. This is a long-running and resource-intensive task.</p>
+                <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                  Start Full Sync
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -60,27 +73,31 @@ const AdminPage = () => {
     }
   };
 
-  const tabs = ['Listings', 'Status', 'Actions'];
-
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <h1 className="text-4xl font-bold text-yellow-400 mb-8">Admin Dashboard</h1>
-      <div className="flex space-x-4 border-b border-gray-700 mb-8">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`py-2 px-4 font-bold text-lg transition duration-300 ${
-              activeTab === tab
-                ? 'text-yellow-400 border-b-2 border-yellow-400'
-                : 'text-gray-500 hover:text-yellow-400'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+    <div className="bg-gray-900 text-white min-h-screen p-4 md:p-8">
+      <h1 className="text-3xl md:text-4xl font-bold mb-8">Admin Dashboard</h1>
+
+      <div className="border-b border-gray-700">
+        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`${
+                activeTab === tab
+                  ? 'border-yellow-500 text-yellow-500'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none`}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
       </div>
-      <div>{renderContent()}</div>
+
+      <div className="mt-8 bg-gray-800 border border-gray-700 rounded-lg p-8">
+        {renderContent()}
+      </div>
     </div>
   );
 };
