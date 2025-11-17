@@ -1,9 +1,6 @@
-'use client'
-
-import { Wallet, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import WalletButton from './WalletButton'
 
 export default function Header({ apiStatus, lastUpdated, onMenuClick }) {
   const statusIndicator = () => {
@@ -56,12 +53,6 @@ export default function Header({ apiStatus, lastUpdated, onMenuClick }) {
               Last Update: {lastUpdated ? lastUpdated.toLocaleTimeString() : '...'}
             </div>
           </div>
-          {/* <button className="btn-primary px-4 py-2 rounded-lg flex items-center space-x-2 focus-gold text-sm sm:text-base">
-            <Wallet className="w-4 h-4" />
-            <span className="hidden sm:inline">Connect Wallet</span>
-            <span className="sm:hidden">Connect</span>
-          </button> */}
-          <WalletButton />
         </div>
       </div>
     </header>

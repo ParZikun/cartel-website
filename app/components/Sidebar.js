@@ -1,42 +1,117 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { X, Search } from 'lucide-react'
 
-const menuItems = [
-  { name: 'Deals', href: '/', icon: '💰' },
-  { name: 'Inspect', href: '/inspect', icon: '🔍' },
-  { name: 'Admin', href: '/admin', icon: '⚙️' },
-];
+const FilterButton = ({ label, value, activeValue, onClick }) => (
+  <button
+    onClick={() => onClick(value)}
+    className={`px-3 py-1.5 text-sm rounded-full transition-colors duration-200 ${
+      activeValue === value
+        ? 'bg-accent-gold text-primary-bg font-semibold'
+        : 'bg-white/10 text-primary-text/80 hover:bg-white/20'
+    }`}
+  >
+    {label}
+  </button>
+)
 
-export default function Sidebar() {
-  const pathname = usePathname();
+const SortDropdown = ({ value, onChange, options }) => (
+  <div className="relative">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full appearance-none bg-black/30 border border-gray-700 rounded-lg px-4 py-2.5 text-primary-text/90 focus:outline-none focus:ring-2 focus:ring-accent-gold"
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)
+
+export default function Sidebar({
+  filterValue,
+  onFilterChange,
+  sortValue,
+  onSortChange,
+  timeFilterValue,
+  onTimeFilterChange,
+  searchValue,
+  onSearchChange,
+  onClose,
+}) {
+  const filterOptions = [
+    { label: 'All', value: 'all' },
+    { label: 'Autobuy', value: 'autobuy' },
+    { label: 'Alert', value: 'alert' },
+    { label: 'Info', value: 'info' },
+  ]
+
+  const sortOptions = [
+    { label: 'Listed Time', value: 'listed-time' },
+    { label: 'Price: Low to High', value: 'price-low' },
+    { label: 'Price: High to Low', value: 'price-high' },
+    { label: 'Difference %', value: 'difference-percent' },
+    { label: 'Popularity', value: 'popularity' },
+  ]
+
+  const timeFilterOptions = [
+    { label: 'Last Hour', value: '1h' },
+    { label: 'Last 6 Hours', value: '6h' },
+    { label: 'Last 24 Hours', value: '24h' },
+    { label: 'All Time', value: 'all' },
+  ]
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-64 bg-gray-900 text-white flex flex-col">
-      <div className="p-6 text-2xl font-bold border-b border-gray-700">
-        Card Cartel
+    <div className="h-full bg-primary-bg/90 backdrop-blur-lg border-r border-accent-gold/10 flex flex-col p-6">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-pixel-lg text-accent-gold">Filters</h2>
+        <button onClick={onClose} className="lg:hidden text-primary-text/70 hover:text-white">
+          <X size={24} />
+        </button>
       </div>
-      <nav className="mt-6">
-        <ul>
-          {menuItems.map((item) => (
-            <li key={item.name} className="px-4">
-              <Link
-                href={item.href}
-                className={`flex items-center p-3 my-1 rounded-lg transition-colors
-                  ${
-                    pathname === item.href
-                      ? 'bg-gray-700 text-yellow-400'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`}
-              >
-                <span className="mr-4 text-2xl">{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
-              </Link>
-            </li>
+
+      {/* Search */}
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-text/50" size={20} />
+        <input
+          type="text"
+          placeholder="Search by name, ID, pop..."
+          value={searchValue}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full bg-black/30 border border-gray-700 rounded-lg pl-12 pr-4 py-2.5 text-white font-mono focus:outline-none focus:ring-2 focus:ring-accent-gold"
+        />
+      </div>
+
+      {/* Category Filter */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3 text-primary-text/90">Category</h3>
+        <div className="flex flex-wrap gap-2">
+          {filterOptions.map((opt) => (
+            <FilterButton
+              key={opt.value}
+              label={opt.label}
+              value={opt.value}
+              activeValue={filterValue}
+              onClick={onFilterChange}
+            />
           ))}
-        </ul>
-      </nav>
-    </aside>
-  );
+        </div>
+      </div>
+
+      {/* Sort By */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3 text-primary-text/90">Sort By</h3>
+        <SortDropdown value={sortValue} onChange={onSortChange} options={sortOptions} />
+      </div>
+
+      {/* Added Time Filter */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-primary-text/90">Added Time</h3>
+        <SortDropdown value={timeFilterValue} onChange={onTimeFilterChange} options={timeFilterOptions} />
+      </div>
+    </div>
+  )
 }

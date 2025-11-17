@@ -5,30 +5,21 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import Sidebar from './components/Sidebar'
 import ListingGrid from './components/ListingGrid'
-import HoldingsGrid from './components/HoldingsGrid'
-import { useWallet } from '@solana/wallet-adapter-react';
-
-
 import { getSolPriceUsd } from './live/priceService'
 
 export default function Home() {
   const [listings, setListings] = useState([])
-  const [holdings, setHoldings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('listed-time')
+  const [timeFilter, setTimeFilter] = useState('all')
   const [solPriceUSD, setSolPriceUSD] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [apiStatus, setApiStatus] = useState('loading')
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [view, setView] = useState('listings') // 'listings' or 'holdings'
-  const { connected, publicKey } = useWallet();
-
-  const walletAddress = connected && publicKey ? publicKey.toBase58() : null;
-  // const walletAddress = connected && publicKey ? "2yDeCKeFbjiwHhCvRohd2groXGaLVZNkrZLTTkiuTp2d": null;;
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -49,42 +40,13 @@ export default function Home() {
       setError(null);
 
       try {
-        if (view === 'listings') {
-          const response = await fetch('/api/get-listings');
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-          }
-          const data = await response.json();
-          setListings(data);
-        } else if (view === 'holdings') {
-          if (!connected || !walletAddress) {
-            setHoldings([]);
-            setLoading(false);
-            return;
-          }
-          const response = await fetch(`/api/wallets/${walletAddress}/tokens`);
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-          }
-          const rawHoldings = await response.json();
-          
-          // Safely filter for Pokemon cards
-          const pokemonHoldings = rawHoldings.filter(item => {
-            if (!item || !Array.isArray(item.attributes)) {
-              return false;
-            }
-            return item.attributes.some(attr => 
-              typeof attr === 'object' && attr !== null &&
-              typeof attr.trait_type === 'string' && attr.trait_type === 'Category' &&
-              typeof attr.value === 'string' && attr.value === 'Pokemon'
-            );
-          });
-
-          setHoldings(pokemonHoldings);
+        const response = await fetch('/api/get-listings');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
-
+        const data = await response.json();
+        setListings(data);
         setApiStatus('live');
         setLastUpdated(new Date());
       } catch (e) {
@@ -96,11 +58,21 @@ export default function Home() {
     };
 
     fetchData();
-
-  }, [view, walletAddress, connected]);
+  }, []);
 
   const filteredAndSortedListings = useMemo(() => {
-    return listings
+    const now = new Date();
+    const timeFilteredListings = listings.filter(listing => {
+      if (timeFilter === 'all') return true;
+      const listedAt = new Date(listing.listed_at);
+      const diffHours = (now - listedAt) / (1000 * 60 * 60);
+      if (timeFilter === '1h') return diffHours <= 1;
+      if (timeFilter === '6h') return diffHours <= 6;
+      if (timeFilter === '24h') return diffHours <= 24;
+      return true;
+    });
+
+    return timeFilteredListings
       .map(listing => {
         const listingPriceUSD = listing.price_amount ? listing.price_amount * solPriceUSD : null;
         const diffPercent = (listingPriceUSD && listing.alt_value > 0) ? (((listingPriceUSD - listing.alt_value) / listing.alt_value) * 100) : null;
@@ -139,7 +111,7 @@ export default function Home() {
             return new Date(b.listed_at) - new Date(a.listed_at);
         }
       });
-  }, [listings, searchQuery, filter, sort, solPriceUSD]);
+  }, [listings, searchQuery, filter, sort, timeFilter, solPriceUSD]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -157,20 +129,16 @@ export default function Home() {
             onFilterChange={setFilter} 
             sortValue={sort} 
             onSortChange={setSort}
+            timeFilterValue={timeFilter}
+            onTimeFilterChange={setTimeFilter}
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
             onClose={() => setIsSidebarOpen(false)}
-            view={view}
-            setView={setView}
           />
         </aside>
         
         <main className="lg:col-span-3 xl:col-span-4 px-4 sm:px-6 lg:px-8 py-8">
-          {view === 'listings' ? (
-            <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
-          ) : (
-            <HoldingsGrid holdings={holdings} loading={loading} error={error} />
-          )}
+          <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
         </main>
       </div>
       
