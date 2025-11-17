@@ -1,101 +1,141 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState('Listings');
-  const tabs = ['Listings', 'Status', 'Actions'];
+  const [activeTab, setActiveTab] = useState('listings');
+
+  const listings = [
+    { id: 1, name: 'Rare Card #1', price: '5.5 SOL', status: 'Autobuy', imageUrl: '/logo.png' },
+    { id: 2, name: 'Epic Card #2', price: '12.0 SOL', status: 'Good', imageUrl: '/logo2.png' },
+    { id: 3, name: 'Legendary Card #3 - A Very Long Name That Should Be Truncated', price: '25.2 SOL', status: 'Autobuy', imageUrl: '/logo.png' },
+    { id: 4, name: 'Common Card #4', price: '1.2 SOL', status: 'Listed', imageUrl: '/logo2.png' },
+    { id: 5, name: 'Uncommon Card #5', price: '3.7 SOL', status: 'Good', imageUrl: '/logo.png' },
+  ];
+
+  const statusColors = {
+    'Autobuy': 'bg-yellow-500/20 text-yellow-400 border border-yellow-600',
+    'Good': 'bg-red-500/20 text-red-400 border border-red-600',
+    'Listed': 'bg-gray-500/20 text-gray-400 border border-gray-600',
+  };
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'Listings':
+      case 'listings':
         return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">All Listings</h2>
-            <p className="text-gray-400">Table of all listings will go here.</p>
-          </div>
-        );
-      case 'Status':
-        return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">System Status</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-gray-700 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2">App Status</h3>
-                <p className="text-green-400 font-bold">Running</p>
-              </div>
-              <div className="bg-gray-700 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2">Last Scan</h3>
-                <p className="text-gray-300">2 minutes ago</p>
-              </div>
-              <div className="bg-gray-700 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2">Deals Found</h3>
-                <p className="text-gray-300">12</p>
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-4">Log Viewer</h3>
-            <div className="bg-black p-4 rounded-lg">
-              <pre className="font-mono text-green-400 text-sm overflow-x-auto h-48">
-                <code>
-                  [2025-11-17 10:30:00] INFO: Application started successfully.<br />
-                  [2025-11-17 10:31:15] INFO: Scanning Magic Eden for new listings...<br />
-                  [2025-11-17 10:31:45] INFO: Found 5 new listings below floor price.<br />
-                  [2025-11-17 10:32:01] WARN: High slippage detected for mint XYZ.<br />
-                </code>
-              </pre>
+          <div className="glass p-4">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-black/40 text-accent-gold font-pixel-xs uppercase">
+                  <tr>
+                    <th className="p-3 text-left"></th>
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-right">Price</th>
+                    <th className="p-3 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {listings.map((item) => (
+                    <tr key={item.id} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
+                      <td className="p-2">
+                        <img src={item.imageUrl} alt={item.name} className="w-10 h-10 rounded-md object-cover" />
+                      </td>
+                      <td className="p-2 truncate max-w-xs">{item.name}</td>
+                      <td className="p-2 text-right font-mono">{item.price}</td>
+                      <td className="p-2 text-center">
+                        <span className={`px-2 py-1 text-xs rounded-full font-bold ${statusColors[item.status] || statusColors['Listed']}`}>
+                          {item.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         );
-      case 'Actions':
+      case 'status':
         return (
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Manual Actions</h2>
-            <div className="space-y-8">
-              <div className="bg-gray-700 p-6 rounded-lg">
-                <h3 className="text-xl font-semibold mb-4">Re-check Skipped Listings</h3>
-                <p className="text-gray-400 mb-4">Force the application to re-evaluate listings that were previously skipped due to errors or other conditions.</p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                  Run Re-check
-                </button>
-              </div>
-              <div className="bg-gray-700 p-6 rounded-lg border border-red-500/50">
-                <h3 className="text-xl font-semibold mb-4">Full Database Sync</h3>
-                <p className="text-gray-400 mb-4">Perform a full synchronization with the source data, potentially overwriting existing entries. This is a long-running and resource-intensive task.</p>
-                <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                  Start Full Sync
-                </button>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass p-4 flex flex-col items-center justify-center">
+              <p className="text-2xl text-white font-bold">1,234</p>
+              <p className="text-xs text-gray-400">Total Listings</p>
+            </div>
+            <div className="glass p-4 flex flex-col items-center justify-center">
+              <p className="text-2xl text-white font-bold">56</p>
+              <p className="text-xs text-gray-400">Autobuy Targets</p>
+            </div>
+            <div className="glass p-4 flex flex-col items-center justify-center">
+              <p className="text-2xl text-white font-bold">Online</p>
+              <p className="text-xs text-gray-400">Bot Status</p>
+            </div>
+            <div className="md:col-span-3 mt-4">
+                <p className="text-accent-gold font-pixel-s mb-2">Log Console</p>
+                <div className="bg-black border border-gray-800 rounded-md p-4 h-64 overflow-y-auto">
+                    <pre className="text-green-500 font-mono text-xs">
+                        [INFO] Bot started successfully.<br/>
+                        [INFO] Connecting to Magic Eden...<br/>
+                        [SUCCESS] Connection established.<br/>
+                        [INFO] Watching 5 collections.<br/>
+                        [DEBUG] Found new listing for "Rare Card #1" at 5.5 SOL.<br/>
+                        [WARN] Price is above threshold. Skipping.<br/>
+                        [DEBUG] Found new listing for "Epic Card #2" at 12.0 SOL.<br/>
+                        [SUCCESS] Autobuy triggered for "Epic Card #2".<br/>
+                        [INFO] Transaction submitted.<br/>
+                    </pre>
+                </div>
             </div>
           </div>
+        );
+      case 'actions':
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="glass p-6 flex flex-col items-center">
+                    <h3 className="text-lg text-white font-bold mb-4">Manual Scan</h3>
+                    <p className="text-gray-400 text-sm text-center mb-6">Trigger a one-time scan for all targeted collections based on current criteria.</p>
+                    <button className="w-full py-2 px-4 rounded-md transition-all border border-blue-500 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300">
+                        Run Re-check
+                    </button>
+                </div>
+                <div className="glass p-6 flex flex-col items-center">
+                    <h3 className="text-lg text-white font-bold mb-4">Force Sync</h3>
+                    <p className="text-gray-400 text-sm text-center mb-6">Perform a full synchronization with the database, updating all listings and states.</p>
+                    <button className="w-full py-2 px-4 rounded-md transition-all border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                        Full Sync
+                    </button>
+                </div>
+            </div>
         );
       default:
         return null;
     }
   };
 
-  return (
-    <div className="bg-gray-900 text-white min-h-screen p-4 md:p-8">
-      <h1 className="text-3xl md:text-4xl font-bold mb-8">Admin Dashboard</h1>
+  const getTabClass = (tabName) => {
+    return activeTab === tabName
+      ? 'text-accent-gold border-b-2 border-accent-gold'
+      : 'text-gray-500 hover:text-white';
+  };
 
-      <div className="border-b border-gray-700">
-        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`${
-                activeTab === tab
-                  ? 'border-yellow-500 text-yellow-500'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none`}
-            >
-              {tab}
-            </button>
-          ))}
+  return (
+    <div className="min-h-screen text-primary-text font-mono p-6 bg-primary-dark">
+      <h1 className="text-accent-gold font-pixel-xl mb-8">Admin Dashboard</h1>
+      
+      <div className="mb-8">
+        <nav className="flex space-x-8 border-b border-gray-800">
+          <button onClick={() => setActiveTab('listings')} className={`pb-2 font-bold transition-colors ${getTabClass('listings')}`}>
+            Listings
+          </button>
+          <button onClick={() => setActiveTab('status')} className={`pb-2 font-bold transition-colors ${getTabClass('status')}`}>
+            Status
+          </button>
+          <button onClick={() => setActiveTab('actions')} className={`pb-2 font-bold transition-colors ${getTabClass('actions')}`}>
+            Actions
+          </button>
         </nav>
       </div>
 
-      <div className="mt-8 bg-gray-800 border border-gray-700 rounded-lg p-8">
+      <div>
         {renderContent()}
       </div>
     </div>

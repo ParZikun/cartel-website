@@ -1,53 +1,56 @@
-"use client";
+'use client'
 
-import React, { useState } from 'react';
+import { useState } from 'react'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 
-const InspectPage = () => {
-  const [mintAddress, setMintAddress] = useState('');
-  const [cardDetails, setCardDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
+export default function InspectPage() {
+  const [mintAddress, setMintAddress] = useState('')
 
-  const handleSearch = async () => {
-    if (!mintAddress) return;
-    // Placeholder for search logic
-    console.log(`Searching for mint address: ${mintAddress}`);
-  };
+  const handleSearch = () => {
+    if (mintAddress) {
+      console.log(`Searching for mint address: ${mintAddress}`)
+      // Placeholder for search functionality
+    }
+  }
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <h1 className="text-4xl font-bold text-center mb-8">Inspect a Card</h1>
-        
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <input
-            type="text"
-            value={mintAddress}
-            onChange={(e) => setMintAddress(e.target.value)}
-            placeholder="Token Mint Address"
-            className="bg-gray-800 border border-gray-600 rounded-lg p-4 w-full flex-grow focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          />
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg hover:bg-yellow-600 transition duration-300 disabled:bg-gray-500"
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
-        </div>
-
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 min-h-[200px] flex items-center justify-center">
-          {cardDetails ? (
-            <div>
-              {/* Placeholder for card details display */}
-              <pre>{JSON.stringify(cardDetails, null, 2)}</pre>
+    <div className="min-h-screen flex flex-col">
+      <Header apiStatus="live" lastUpdated={new Date()} />
+      
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-2xl mx-auto">
+          <div className="glass rounded-xl shadow-lg p-6 md:p-8">
+            <h1 className="text-accent-gold font-pixel-lg text-2xl md:text-3xl text-center mb-6">
+              Inspect a Card
+            </h1>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <input
+                type="text"
+                value={mintAddress}
+                onChange={(e) => setMintAddress(e.target.value)}
+                placeholder="Enter Mint Address..."
+                className="w-full flex-grow bg-black/40 border border-gray-700 rounded-md px-4 py-2 text-white font-mono focus:outline-none focus:ring-2 focus:ring-accent-gold transition-all duration-300"
+              />
+              <button
+                onClick={handleSearch}
+                className="btn-primary w-full sm:w-auto px-6 py-2 rounded-md text-lg"
+              >
+                Search
+              </button>
             </div>
-          ) : (
-            <p className="text-gray-400">Enter a mint ID to see details</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
-export default InspectPage;
+            <div className="mt-8 p-6 border-2 border-dashed border-gray-700 rounded-lg min-h-[200px] flex items-center justify-center">
+              <p className="text-gray-500 font-mono text-center">
+                Inspection results will appear here...
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  )
+}

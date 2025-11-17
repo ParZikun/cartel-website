@@ -2,6 +2,7 @@
 
 import { Wallet, Menu } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import WalletButton from './WalletButton'
 
 export default function Header({ apiStatus, lastUpdated, onMenuClick }) {
@@ -24,17 +25,24 @@ export default function Header({ apiStatus, lastUpdated, onMenuClick }) {
           <button className="lg:hidden text-primary-text/80 hover:text-accent-gold" onClick={onMenuClick}>
             <Menu className="w-7 h-7" />
           </button>
-          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent-gold/10 border border-accent-gold/30">
-            <Image src="/logo.png" alt="CCP-S Logo" width={28} height={28} />
-          </div>
-          <div className="pokemon-title">
-            <h1 className="pokemon-title-solid font-pokemon text-3xl text-accent-gold">
-              CCP-S
-            </h1>
-            <h1 className="pokemon-title-outline font-pokemon-hollow text-3xl">
-              CCP-S
-            </h1>
-          </div>
+          <Link href="/" className="flex items-center space-x-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent-gold/10 border border-accent-gold/30">
+              <Image src="/logo.png" alt="CCP-S Logo" width={28} height={28} />
+            </div>
+            <div className="pokemon-title">
+              <h1 className="pokemon-title-solid font-pokemon text-3xl text-accent-gold">
+                CCP-S
+              </h1>
+              <h1 className="pokemon-title-outline font-pokemon-hollow text-3xl">
+                CCP-S
+              </h1>
+            </div>
+          </Link>
+          <nav className="hidden lg:flex items-center space-x-4">
+            <Link href="/inspect" className="text-primary-text/80 hover:text-accent-gold transition-colors duration-300">
+              Inspect
+            </Link>
+          </nav>
         </div>
 
         {/* Status and Wallet Button */}
