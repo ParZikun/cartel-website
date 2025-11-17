@@ -189,3 +189,50 @@ body::after {
 .text-pixel-xl {
   font-size: 16px;
 }
+
+/* Holographic Border Definition */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-spin {
+  from { --border-angle: 0deg; }
+  to { --border-angle: 360deg; }
+}
+
+.holo-gold {
+  position: relative;
+  z-index: 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+/* The rotating gradient border */
+.holo-gold::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background: conic-gradient(
+    from var(--border-angle), 
+    #0c0a15 0%, 
+    #FFD700 30%, 
+    #FFA500 50%, 
+    #FFD700 70%, 
+    #0c0a15 100%
+  );
+  border-radius: inherit;
+  animation: border-spin 4s linear infinite;
+}
+
+/* The inner mask to create the hollow card effect */
+.holo-gold::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: rgba(12, 10, 21, 0.95);
+  border-radius: inherit;
+  z-index: -1;
+}
