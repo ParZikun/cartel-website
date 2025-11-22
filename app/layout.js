@@ -4,6 +4,7 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 import { SolanaProvider } from "./components/SolanaProvider";
 import { TransactionProvider } from './context/TransactionContext';
 import localFont from 'next/font/local';
+import Sidebar from './components/Sidebar';
 
 const pokemonHollow = localFont({ 
   src: '../public/pokemon-hollow.ttf',
@@ -18,10 +19,15 @@ const pokemonSolid = localFont({
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${pokemonHollow.variable} ${pokemonSolid.variable}`}>
-      <body>
+      <body className="bg-gray-900">
         <SolanaProvider>
           <TransactionProvider>
-            {children}
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 ml-64">
+                {children}
+              </main>
+            </div>
           </TransactionProvider>
         </SolanaProvider>
       </body>

@@ -161,7 +161,7 @@ export default function Card({ listing, solPriceUSD, priority }) {
     };
 
     return (
-        <div className="card-glass card-glow rounded-xl shadow-lg flex flex-col transition-all duration-300" style={{'--glow-color': categoryStyle.glow, '--border-color': categoryStyle.border, '--border-color-hover': categoryStyle.hover}}>
+        <div className={`card-glass rounded-xl shadow-lg flex flex-col transition-all duration-300 ${listing.cartel_category === 'AUTOBUY' ? 'holo-gold' : 'card-glow'}`} style={{'--glow-color': categoryStyle.glow, '--border-color': categoryStyle.border, '--border-color-hover': categoryStyle.hover}}>
             <div className="relative">
                 <Image src={listing.img_url || 'https://placehold.co/300x420/0c0a15/2d3748?text=N/A'} alt={listing.name} width={300} height={420} className="h-72 w-full object-contain rounded-t-xl pt-4 bg-black/20" priority={priority} placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" />
             </div>
@@ -171,7 +171,7 @@ export default function Card({ listing, solPriceUSD, priority }) {
                 
                 <div className="flex justify-between items-center text-xs text-gray-400 mb-3">
                     <span>{listing.grade || 'N/A'}</span>
-                    <span className="font-mono">Pop: {listing.supply !== null ? listing.supply : 'N/A'}</span>
+                    <span className="font-mono">Pop: {listing.supply != null ? listing.supply : 'N/A'}</span>
                 </div>
                 
                 <div className="text-xs text-gray-500 space-y-1 mb-3">
@@ -187,17 +187,17 @@ export default function Card({ listing, solPriceUSD, priority }) {
                     </div>
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><TrendingDown className="w-3 h-3" />Difference</p>
-                        <p className={`font-mono text-lg font-semibold ${differenceColor}`}>{diffPercent !== null ? `${diffPercent.toFixed(2)}%` : 'N/A'}</p>
+                        <p className={`font-mono text-lg font-semibold ${differenceColor}`}>{diffPercent != null ? `${diffPercent.toFixed(2)}%` : 'N/A'}</p>
                         <p className="font-mono text-xs text-gray-500">&nbsp;</p>
                     </div>
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><Tag className="w-3 h-3" />ALT Value</p>
-                        <p className={`font-mono text-lg ${altConfidenceColor}`}>{listing.alt_value !== null ? `${listing.alt_value.toFixed(2)}` : 'N/A'}</p>
-                        <p className="font-mono text-xs text-gray-500">{(listing.alt_value_lower_bound !== null && listing.alt_value_upper_bound !== null) ? `${listing.alt_value_lower_bound.toFixed(2)} - ${listing.alt_value_upper_bound.toFixed(2)}` : 'N/A'}</p>
+                        <p className={`font-mono text-lg ${altConfidenceColor}`}>{listing.alt_value != null ? `${listing.alt_value.toFixed(2)}` : 'N/A'}</p>
+                        <p className="font-mono text-xs text-gray-500">{(listing.alt_value_lower_bound != null && listing.alt_value_upper_bound != null) ? `${listing.alt_value_lower_bound.toFixed(2)} - ${listing.alt_value_upper_bound.toFixed(2)}` : 'N/A'}</p>
                     </div>
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><BarChart4 className="w-3 h-3" />Cartel AVG</p>
-                        <p className="font-mono text-lg text-white">{listing.avg_price !== null ? `${listing.avg_price.toFixed(2)}` : 'N/A'}</p>
+                        <p className="font-mono text-lg text-white">{listing.avg_price != null ? `${listing.avg_price.toFixed(2)}` : 'N/A'}</p>
                          <p className="font-mono text-xs text-gray-500">&nbsp;</p>
                     </div>
                 </div>

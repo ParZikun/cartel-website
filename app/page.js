@@ -1,34 +1,20 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import Sidebar from './components/Sidebar'
 import ListingGrid from './components/ListingGrid'
-import HoldingsGrid from './components/HoldingsGrid'
-import { useWallet } from '@solana/wallet-adapter-react';
-
-
 import { getSolPriceUsd } from './live/priceService'
 
 export default function Home() {
   const [listings, setListings] = useState([])
-  const [holdings, setHoldings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('listed-time')
+  const [timeFilter, setTimeFilter] = useState('all')
   const [solPriceUSD, setSolPriceUSD] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [apiStatus, setApiStatus] = useState('loading')
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [view, setView] = useState('listings') // 'listings' or 'holdings'
-  const { connected, publicKey } = useWallet();
-
-  const walletAddress = connected && publicKey ? publicKey.toBase58() : null;
-  // const walletAddress = connected && publicKey ? "2yDeCKeFbjiwHhCvRohd2groXGaLVZNkrZLTTkiuTp2d": null;;
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -49,42 +35,13 @@ export default function Home() {
       setError(null);
 
       try {
-        if (view === 'listings') {
-          const response = await fetch('/api/get-listings');
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-          }
-          const data = await response.json();
-          setListings(data);
-        } else if (view === 'holdings') {
-          if (!connected || !walletAddress) {
-            setHoldings([]);
-            setLoading(false);
-            return;
-          }
-          const response = await fetch(`/api/wallets/${walletAddress}/tokens`);
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-          }
-          const rawHoldings = await response.json();
-          
-          // Safely filter for Pokemon cards
-          const pokemonHoldings = rawHoldings.filter(item => {
-            if (!item || !Array.isArray(item.attributes)) {
-              return false;
-            }
-            return item.attributes.some(attr => 
-              typeof attr === 'object' && attr !== null &&
-              typeof attr.trait_type === 'string' && attr.trait_type === 'Category' &&
-              typeof attr.value === 'string' && attr.value === 'Pokemon'
-            );
-          });
-
-          setHoldings(pokemonHoldings);
+        const response = await fetch('/api/get-listings');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
-
+        const data = await response.json();
+        setListings(data);
         setApiStatus('live');
         setLastUpdated(new Date());
       } catch (e) {
@@ -96,11 +53,21 @@ export default function Home() {
     };
 
     fetchData();
-
-  }, [view, walletAddress, connected]);
+  }, []);
 
   const filteredAndSortedListings = useMemo(() => {
-    return listings
+    const now = new Date();
+    const timeFilteredListings = listings.filter(listing => {
+      if (timeFilter === 'all') return true;
+      const listedAt = new Date(listing.listed_at);
+      const diffHours = (now - listedAt) / (1000 * 60 * 60);
+      if (timeFilter === '1h') return diffHours <= 1;
+      if (timeFilter === '6h') return diffHours <= 6;
+      if (timeFilter === '24h') return diffHours <= 24;
+      return true;
+    });
+
+    return timeFilteredListings
       .map(listing => {
         const listingPriceUSD = listing.price_amount ? listing.price_amount * solPriceUSD : null;
         const diffPercent = (listingPriceUSD && listing.alt_value > 0) ? (((listingPriceUSD - listing.alt_value) / listing.alt_value) * 100) : null;
@@ -139,42 +106,57 @@ export default function Home() {
             return new Date(b.listed_at) - new Date(a.listed_at);
         }
       });
-  }, [listings, searchQuery, filter, sort, solPriceUSD]);
+  }, [listings, searchQuery, filter, sort, timeFilter, solPriceUSD]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header 
-        apiStatus={apiStatus} 
-        lastUpdated={lastUpdated} 
-        onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5">
-        <aside className={`fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></aside>
-        <aside className={`fixed top-0 left-0 h-full w-72 z-40 transform transition-transform duration-300 ease-in-out bg-primary-bg lg:static lg:col-span-1 xl:col-span-1 lg:w-auto lg:transform-none lg:transition-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <Sidebar 
-            filterValue={filter} 
-            onFilterChange={setFilter} 
-            sortValue={sort} 
-            onSortChange={setSort}
-            searchValue={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSidebarOpen(false)}
-            view={view}
-            setView={setView}
-          />
-        </aside>
-        
-        <main className="lg:col-span-3 xl:col-span-4 px-4 sm:px-6 lg:px-8 py-8">
-          {view === 'listings' ? (
-            <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
-          ) : (
-            <HoldingsGrid holdings={holdings} loading={loading} error={error} />
-          )}
-        </main>
+    <div className="w-full h-full">
+      {/* Header/Controls Bar */}
+      <div className="p-4 bg-primary-bg border-b border-gray-700">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full md:w-64 bg-gray-800 border border-gray-700 rounded-md py-2 px-4 mb-2 md:mb-0"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <select value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4">
+                <option value="all">All Categories</option>
+                <option value="autobuy">Autobuy</option>
+                <option value="alert">Alert</option>
+                <option value="info">Info</option>
+              </select>
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4">
+                <option value="listed-time">Newest</option>
+                <option value="price-low">Price: Low-High</option>
+                <option value="price-high">Price: High-Low</option>
+                <option value="difference-percent">Difference %</option>
+                <option value="popularity">Popularity</option>
+              </select>
+              <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4 col-span-2 md:col-span-1">
+                <option value="all">All Time</option>
+                <option value="1h">Last 1h</option>
+                <option value="6h">Last 6h</option>
+                <option value="24h">Last 24h</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center justify-end space-x-4 mt-2 md:mt-0 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className={`h-3 w-3 rounded-full ${apiStatus === 'live' ? 'bg-green-500' : apiStatus === 'loading' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                <span>{apiStatus}</span>
+              </div>
+              {lastUpdated && <span>Updated: {lastUpdated.toLocaleTimeString()}</span>}
+          </div>
+        </div>
       </div>
-      
-      <Footer />
+
+      {/* Main Content */}
+      <main className="overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
+      </main>
     </div>
   )
 }
