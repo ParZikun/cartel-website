@@ -3,6 +3,7 @@ import './styles/globals.css'
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { SolanaProvider } from "./components/SolanaProvider";
 import { TransactionProvider } from './context/TransactionContext';
+import { UIProvider } from '../context/UIContext';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import localFont from 'next/font/local';
@@ -23,17 +24,19 @@ export default function RootLayout({ children }) {
       <body>
         <SolanaProvider>
           <TransactionProvider>
-            <div className="min-h-screen">
-              <Navbar />
-              <div className="flex pt-20">
-                <Sidebar />
-                <main className="flex-1 lg:pl-64">
-                  <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {children}
-                  </div>
-                </main>
+            <UIProvider>
+              <div className="min-h-screen">
+                <Navbar />
+                <div className="flex pt-20">
+                  <Sidebar />
+                  <main className="flex-1 lg:pl-64">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                      {children}
+                    </div>
+                  </main>
+                </div>
               </div>
-            </div>
+            </UIProvider>
           </TransactionProvider>
         </SolanaProvider>
       </body>
