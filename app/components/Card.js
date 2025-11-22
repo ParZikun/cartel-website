@@ -176,28 +176,28 @@ export default function Card({ listing, solPriceUSD, priority }) {
 
                 <div className="text-xs text-gray-500 space-y-1 mb-3">
                     <p>Grading ID: <span className="font-mono text-gray-300">{listing.grading_id || 'N/A'}</span></p>
-                    <p>Insured: <span className="font-mono text-gray-300">{listing.insured_value != null ? listing.insured_value.toFixed(2) : 'N/A'}</span></p>
+                    <p>Insured: <span className="font-mono text-gray-300">{listing.insured_value != null ? Number(listing.insured_value).toFixed(2) : 'N/A'}</span></p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 my-2">
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><WalletCards className="w-3 h-3" />Price (SOL)</p>
-                        <p className="font-mono text-white text-lg">{listing.price_amount ? listing.price_amount.toFixed(4) : 'N/A'}</p>
-                        <p className="font-mono text-xs text-gray-500">{listingPriceUSD ? `~${listingPriceUSD.toFixed(2)}` : ''}</p>
+                        <p className="font-mono text-white text-lg">{listing.price_amount != null ? Number(listing.price_amount).toFixed(4) : 'N/A'}</p>
+                        <p className="font-mono text-xs text-gray-500">{listingPriceUSD != null ? `~${Number(listingPriceUSD).toFixed(2)}` : ''}</p>
                     </div>
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><TrendingDown className="w-3 h-3" />Difference</p>
-                        <p className={`font-mono text-lg font-semibold ${differenceColor}`}>{diffPercent != null ? `${diffPercent.toFixed(2)}%` : 'N/A'}</p>
+                        <p className={`font-mono text-lg font-semibold ${differenceColor}`}>{diffPercent != null ? `${Number(diffPercent).toFixed(2)}%` : 'N/A'}</p>
                         <p className="font-mono text-xs text-gray-500">&nbsp;</p>
                     </div>
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><Tag className="w-3 h-3" />ALT Value</p>
-                        <p className={`font-mono text-lg ${altConfidenceColor}`}>{listing.alt_value != null ? `${listing.alt_value.toFixed(2)}` : 'N/A'}</p>
-                        <p className="font-mono text-xs text-gray-500">{(listing.alt_value_lower_bound != null && listing.alt_value_upper_bound != null) ? `${listing.alt_value_lower_bound.toFixed(2)} - ${listing.alt_value_upper_bound.toFixed(2)}` : 'N/A'}</p>
+                        <p className={`font-mono text-lg ${altConfidenceColor}`}>{listing.alt_value != null ? `${Number(listing.alt_value).toFixed(2)}` : 'N/A'}</p>
+                        <p className="font-mono text-xs text-gray-500">{(listing.alt_value_lower_bound != null && listing.alt_value_upper_bound != null) ? `${Number(listing.alt_value_lower_bound).toFixed(2)} - ${Number(listing.alt_value_upper_bound).toFixed(2)}` : 'N/A'}</p>
                     </div>
                     <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
                         <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><BarChart4 className="w-3 h-3" />Cartel AVG</p>
-                        <p className="font-mono text-lg text-white">{listing.avg_price != null ? `${listing.avg_price.toFixed(2)}` : 'N/A'}</p>
+                        <p className="font-mono text-lg text-white">{listing.avg_price != null ? `${Number(listing.avg_price).toFixed(2)}` : 'N/A'}</p>
                         <p className="font-mono text-xs text-gray-500">&nbsp;</p>
                     </div>
                 </div>

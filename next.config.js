@@ -43,6 +43,9 @@ const nextConfig = {
         hostname: '*.ipfs.nftstorage.link',
       },
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   env: {
     API_URL: process.env.API_URL,

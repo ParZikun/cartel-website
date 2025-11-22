@@ -1,18 +1,26 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import ListingGrid from './components/ListingGrid'
 import { getSolPriceUsd } from './live/priceService'
 import { Search, Filter, ArrowUpDown } from 'lucide-react'
+import AdvancedFilters from '../components/AdvancedFilters'
+import { toast } from 'sonner'
 
 export default function Home() {
   const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('listed-time')
   const [solPriceUSD, setSolPriceUSD] = useState(null)
+  const [advancedFilters, setAdvancedFilters] = useState({
+    priceRange: { min: '', max: '' },
+    grades: [],
+    categories: []
+  })
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -41,12 +49,32 @@ export default function Home() {
         setListings(data);
       } catch (e) {
         setError(e.message);
+        toast.error('Failed to load listings', {
+          description: e.message
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleClearFilters = useCallback(() => {
+    setAdvancedFilters({
+      priceRange: { min: '', max: '' },
+      grades: [],
+      categories: []
+    });
+    toast.success('Filters cleared');
   }, []);
 
   const filteredAndSortedListings = useMemo(() => {
@@ -57,14 +85,14 @@ export default function Home() {
         return { ...listing, diffPercent };
       })
       .filter(listing => {
-        // Search filter
-        const searchLower = searchQuery.toLowerCase();
+        // Search filter (using debounced search)
+        const searchLower = debouncedSearch.toLowerCase();
         const nameMatch = listing.name?.toLowerCase().includes(searchLower);
         const gradingIdMatch = listing.grading_id?.toString().toLowerCase().includes(searchLower);
         const popMatch = listing.supply?.toString().toLowerCase().includes(searchLower);
         const searchMatch = nameMatch || gradingIdMatch || popMatch;
 
-        // Category filter
+        // Category filter (old filter dropdown)
         const categoryMap = {
           autobuy: 'AUTOBUY',
           alert: 'GOOD',
@@ -72,7 +100,20 @@ export default function Home() {
         };
         const categoryMatch = filter === 'all' || listing.cartel_category === categoryMap[filter];
 
-        return searchMatch && categoryMatch && listing.cartel_category !== 'SKIP';
+        // Advanced filters - Price range
+        const priceMatch =
+          (advancedFilters.priceRange.min === '' || listing.price_amount >= advancedFilters.priceRange.min) &&
+          (advancedFilters.priceRange.max === '' || listing.price_amount <= advancedFilters.priceRange.max);
+
+        // Advanced filters - Grades
+        const gradeMatch = advancedFilters.grades.length === 0 ||
+          advancedFilters.grades.includes(listing.grade_num);
+
+        // Advanced filters - Categories
+        const advCategoryMatch = advancedFilters.categories.length === 0 ||
+          advancedFilters.categories.includes(listing.cartel_category);
+
+        return searchMatch && categoryMatch && priceMatch && gradeMatch && advCategoryMatch && listing.cartel_category !== 'SKIP';
       })
       .sort((a, b) => {
         switch (sort) {
@@ -89,7 +130,7 @@ export default function Home() {
             return new Date(b.listed_at) - new Date(a.listed_at);
         }
       });
-  }, [listings, searchQuery, filter, sort, solPriceUSD]);
+  }, [listings, debouncedSearch, filter, sort, solPriceUSD, advancedFilters]);
 
   return (
     <div className="w-full h-full p-6 space-y-6">
@@ -109,29 +150,28 @@ export default function Home() {
 
         {/* Filters & Sort */}
         <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-          {/* Filter Pills */}
-          <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/10">
-            {[
-              { id: 'all', label: 'All' },
-              { id: 'autobuy', label: 'Gold', color: 'text-yellow-400' },
-              { id: 'alert', label: 'Red', color: 'text-red-400' },
-              { id: 'info', label: 'Blue', color: 'text-sky-400' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setFilter(item.id)}
-                className={`
-                  px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
-                  ${filter === item.id
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }
-                  ${item.color && filter === item.id ? item.color : ''}
-                `}
-              >
-                {item.label}
-              </button>
-            ))}
+          {/* Advanced Filters */}
+          <AdvancedFilters
+            filters={advancedFilters}
+            onFilterChange={setAdvancedFilters}
+            onClearFilters={handleClearFilters}
+          />
+
+          {/* Filter Dropdown */}
+          <div className="relative min-w-[140px]">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <Filter className="w-4 h-4 text-gray-400" />
+            </div>
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
+            >
+              <option value="all">All Deals</option>
+              <option value="autobuy">Auto Buy</option>
+              <option value="alert">Good Deals</option>
+              <option value="info">Info</option>
+            </select>
           </div>
 
           {/* Sort Dropdown */}
@@ -144,15 +184,12 @@ export default function Home() {
               onChange={(e) => setSort(e.target.value)}
               className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
             >
-              <option value="listed-time">Newest Listed</option>
+              <option value="listed-time">Newest First</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
-              <option value="difference-percent">Best Value</option>
+              <option value="difference-percent">Best Deals</option>
               <option value="popularity">Popularity</option>
             </select>
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <Filter className="w-3 h-3 text-gray-400" />
-            </div>
           </div>
         </div>
       </div>

@@ -14,57 +14,81 @@ export default function HoldingsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [filter, setFilter] = useState('all')
     const [sort, setSort] = useState('listed-time')
+    const [pagination, setPagination] = useState({ offset: 0, limit: 20, hasMore: true })
 
-    useEffect(() => {
-        const fetchHoldings = async () => {
-            if (!connected || !publicKey) {
+    const fetchHoldings = async (offset = 0) => {
+        // Temporarily disabled for testing with hardcoded wallet
+        // if (!connected || !publicKey) {
+        //     setHoldings([])
+        //     return
+        // }
+
+        setLoading(true)
+        setError(null)
+
+        try {
+            const walletAddress = "2yDeCKeFbjiwHhCvRohd2groXGaLVZNkrZLTTkiuTp2d" //publicKey.toBase58()
+            const response = await fetch(`/api/get-wallet-holdings?wallet=${walletAddress}&offset=${offset}&limit=${pagination.limit}`)
+
+            if (response.status === 404) {
                 setHoldings([])
+                setLoading(false)
                 return
             }
 
-            setLoading(true)
-            setError(null)
-
-            try {
-                const walletAddress = publicKey.toBase58()
-                const response = await fetch(`api/wallets/${walletAddress}/tokens`)
-
-                if (response.status === 404) {
-                    setHoldings([])
-                    setLoading(false)
-                    return
-                }
-
-                if (!response.ok) {
-                    const errorText = await response.text()
-                    throw new Error(`API Error: ${response.status} - ${errorText}`)
-                }
-
-                const rawHoldings = await response.json()
-
-                // Safely filter for Pokemon cards
-                const pokemonHoldings = rawHoldings.filter(item => {
-                    if (!item || !Array.isArray(item.attributes)) {
-                        return false
-                    }
-                    return item.attributes.some(attr =>
-                        typeof attr === 'object' && attr !== null &&
-                        typeof attr.trait_type === 'string' && attr.trait_type === 'Category' &&
-                        typeof attr.value === 'string' && attr.value === 'Pokemon'
-                    )
-                })
-
-                setHoldings(pokemonHoldings)
-            } catch (e) {
-                console.error("Failed to fetch holdings:", e)
-                setError(e.message)
-            } finally {
-                setLoading(false)
+            if (!response.ok) {
+                const errorText = await response.text()
+                throw new Error(`API Error: ${response.status} - ${errorText}`)
             }
-        }
 
-        fetchHoldings()
-    }, [connected, publicKey])
+            const data = await response.json()
+            const rawHoldings = data.tokens || []
+
+            // Map API response to ListingGrid format
+            const formattedHoldings = rawHoldings.map(item => ({
+                // Image mapping - API returns 'img' not 'image'
+                img_url: item.img || item.img_url || item.image,
+
+                // Price and value mappings
+                price_amount: parseFloat(item.cartel_avg) || 0,
+                alt_value: parseFloat(item.alt_value) || null,
+                avg_price: parseFloat(item.cartel_avg) || parseFloat(item.avg_price) || null,
+
+                // Alt range - parse from string "min - max"
+                alt_value_lower_bound: item.alt_range ? parseFloat(item.alt_range.split(' - ')[0]) : null,
+                alt_value_upper_bound: item.alt_range ? parseFloat(item.alt_range.split(' - ')[1]) : null,
+
+                // Other fields
+                name: item.name,
+                grade: item.grade,
+                supply: parseInt(item.supply) || null,
+                grading_id: item.grading_id || item.grading_number,
+                token_mint: item.mint || item.token_mint,
+                insured_value: parseFloat(item.insured_value) || null,
+                cartel_category: item.cartel_category,
+                listed_at: item.listed_at,
+                alt_asset_id: item.alt_asset_id,
+                alt_link: item.alt_link,
+                listed: false, // Holdings are not listed for sale
+            }))
+
+            setHoldings(formattedHoldings)
+            setPagination(prev => ({
+                ...prev,
+                offset,
+                hasMore: rawHoldings.length === pagination.limit
+            }))
+        } catch (e) {
+            console.error("Failed to fetch holdings:", e)
+            setError(e.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchHoldings(pagination.offset)
+    }, []) // Removed connected/publicKey dependencies for testing
 
     const filteredAndSortedHoldings = useMemo(() => {
         return holdings
@@ -87,20 +111,21 @@ export default function HoldingsPage() {
             })
     }, [holdings, searchQuery, filter, sort])
 
-    if (!connected) {
-        return (
-            <div className="w-full h-full flex items-center justify-center p-6">
-                <div className="glass p-12 rounded-2xl flex flex-col items-center text-center max-w-md w-full border border-accent-gold/20">
-                    <div className="w-20 h-20 bg-accent-gold/10 rounded-full flex items-center justify-center mb-6 border border-accent-gold/30">
-                        <Wallet className="w-10 h-10 text-accent-gold" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Connect Wallet</h2>
-                    <p className="text-gray-400 mb-8">Connect your Solana wallet to view your Pokemon card holdings.</p>
-                    <WalletButton />
-                </div>
-            </div>
-        )
-    }
+    // Temporarily disabled wallet check for testing
+    // if (!connected) {
+    //     return (
+    //         <div className="w-full h-full flex items-center justify-center p-6">
+    //             <div className="glass p-12 rounded-2xl flex flex-col items-center text-center max-w-md w-full border border-accent-gold/20">
+    //                 <div className="w-20 h-20 bg-accent-gold/10 rounded-full flex items-center justify-center mb-6 border border-accent-gold/30">
+    //                     <Wallet className="w-10 h-10 text-accent-gold" />
+    //                 </div>
+    //                 <h2 className="text-2xl font-bold text-white mb-2">Connect Wallet</h2>
+    //                 <p className="text-gray-400 mb-8">Connect your Solana wallet to view your Pokemon card holdings.</p>
+    //                 <WalletButton />
+    //             </div>
+    //         </div>
+    //     )
+    // }
 
     return (
         <div className="w-full h-full p-6 space-y-6">
@@ -149,7 +174,22 @@ export default function HoldingsPage() {
                     </p>
                 </div>
             ) : (
-                <ListingGrid listings={filteredAndSortedHoldings} loading={loading} error={error} solPriceUSD={null} />
+                <>
+                    <ListingGrid listings={filteredAndSortedHoldings} loading={loading} error={error} solPriceUSD={null} />
+
+                    {/* Load More Button */}
+                    {pagination.hasMore && holdings.length > 0 && (
+                        <div className="flex justify-center mt-8">
+                            <button
+                                onClick={() => fetchHoldings(pagination.offset + pagination.limit)}
+                                disabled={loading}
+                                className="px-6 py-3 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_-5px_rgba(255,215,0,0.3)]"
+                            >
+                                {loading ? 'Loading...' : 'Load More'}
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     )
