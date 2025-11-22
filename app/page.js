@@ -1,9 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import Sidebar from './components/Sidebar'
 import ListingGrid from './components/ListingGrid'
 import { getSolPriceUsd } from './live/priceService'
 
@@ -18,8 +15,6 @@ export default function Home() {
   const [solPriceUSD, setSolPriceUSD] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [apiStatus, setApiStatus] = useState('loading')
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -114,35 +109,54 @@ export default function Home() {
   }, [listings, searchQuery, filter, sort, timeFilter, solPriceUSD]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header 
-        apiStatus={apiStatus} 
-        lastUpdated={lastUpdated} 
-        onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5">
-        <aside className={`fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></aside>
-        <aside className={`fixed top-0 left-0 h-full w-72 z-40 transform transition-transform duration-300 ease-in-out bg-primary-bg lg:static lg:col-span-1 xl:col-span-1 lg:w-auto lg:transform-none lg:transition-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <Sidebar 
-            filterValue={filter} 
-            onFilterChange={setFilter} 
-            sortValue={sort} 
-            onSortChange={setSort}
-            timeFilterValue={timeFilter}
-            onTimeFilterChange={setTimeFilter}
-            searchValue={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSidebarOpen(false)}
-          />
-        </aside>
-        
-        <main className="lg:col-span-3 xl:col-span-4 px-4 sm:px-6 lg:px-8 py-8">
-          <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
-        </main>
+    <div className="w-full h-full">
+      {/* Header/Controls Bar */}
+      <div className="p-4 bg-primary-bg border-b border-gray-700">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full md:w-64 bg-gray-800 border border-gray-700 rounded-md py-2 px-4 mb-2 md:mb-0"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <select value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4">
+                <option value="all">All Categories</option>
+                <option value="autobuy">Autobuy</option>
+                <option value="alert">Alert</option>
+                <option value="info">Info</option>
+              </select>
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4">
+                <option value="listed-time">Newest</option>
+                <option value="price-low">Price: Low-High</option>
+                <option value="price-high">Price: High-Low</option>
+                <option value="difference-percent">Difference %</option>
+                <option value="popularity">Popularity</option>
+              </select>
+              <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4 col-span-2 md:col-span-1">
+                <option value="all">All Time</option>
+                <option value="1h">Last 1h</option>
+                <option value="6h">Last 6h</option>
+                <option value="24h">Last 24h</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center justify-end space-x-4 mt-2 md:mt-0 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className={`h-3 w-3 rounded-full ${apiStatus === 'live' ? 'bg-green-500' : apiStatus === 'loading' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                <span>{apiStatus}</span>
+              </div>
+              {lastUpdated && <span>Updated: {lastUpdated.toLocaleTimeString()}</span>}
+          </div>
+        </div>
       </div>
-      
-      <Footer />
+
+      {/* Main Content */}
+      <main className="overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
+      </main>
     </div>
   )
 }
