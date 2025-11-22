@@ -1,34 +1,18 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import Sidebar from './components/Sidebar'
 import ListingGrid from './components/ListingGrid'
-import HoldingsGrid from './components/HoldingsGrid'
-import { useWallet } from '@solana/wallet-adapter-react';
-
-
 import { getSolPriceUsd } from './live/priceService'
+import { Search, Filter, ArrowUpDown } from 'lucide-react'
 
 export default function Home() {
   const [listings, setListings] = useState([])
-  const [holdings, setHoldings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('listed-time')
   const [solPriceUSD, setSolPriceUSD] = useState(null)
-  const [lastUpdated, setLastUpdated] = useState(null)
-  const [apiStatus, setApiStatus] = useState('loading')
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [view, setView] = useState('listings') // 'listings' or 'holdings'
-  const { connected, publicKey } = useWallet();
-
-  const walletAddress = connected && publicKey ? publicKey.toBase58() : null;
-  // const walletAddress = connected && publicKey ? "2yDeCKeFbjiwHhCvRohd2groXGaLVZNkrZLTTkiuTp2d": null;;
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -45,59 +29,25 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      setApiStatus('loading');
       setError(null);
 
       try {
-        if (view === 'listings') {
-          const response = await fetch('/api/get-listings');
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-          }
-          const data = await response.json();
-          setListings(data);
-        } else if (view === 'holdings') {
-          if (!connected || !walletAddress) {
-            setHoldings([]);
-            setLoading(false);
-            return;
-          }
-          const response = await fetch(`/api/wallets/${walletAddress}/tokens`);
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
-          }
-          const rawHoldings = await response.json();
-          
-          // Safely filter for Pokemon cards
-          const pokemonHoldings = rawHoldings.filter(item => {
-            if (!item || !Array.isArray(item.attributes)) {
-              return false;
-            }
-            return item.attributes.some(attr => 
-              typeof attr === 'object' && attr !== null &&
-              typeof attr.trait_type === 'string' && attr.trait_type === 'Category' &&
-              typeof attr.value === 'string' && attr.value === 'Pokemon'
-            );
-          });
-
-          setHoldings(pokemonHoldings);
+        const response = await fetch('/api/get-listings');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
-
-        setApiStatus('live');
-        setLastUpdated(new Date());
+        const data = await response.json();
+        setListings(data);
       } catch (e) {
         setError(e.message);
-        setApiStatus('error');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-
-  }, [view, walletAddress, connected]);
+  }, []);
 
   const filteredAndSortedListings = useMemo(() => {
     return listings
@@ -142,39 +92,73 @@ export default function Home() {
   }, [listings, searchQuery, filter, sort, solPriceUSD]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header 
-        apiStatus={apiStatus} 
-        lastUpdated={lastUpdated} 
-        onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
-      
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5">
-        <aside className={`fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setIsSidebarOpen(false)}></aside>
-        <aside className={`fixed top-0 left-0 h-full w-72 z-40 transform transition-transform duration-300 ease-in-out bg-primary-bg lg:static lg:col-span-1 xl:col-span-1 lg:w-auto lg:transform-none lg:transition-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <Sidebar 
-            filterValue={filter} 
-            onFilterChange={setFilter} 
-            sortValue={sort} 
-            onSortChange={setSort}
-            searchValue={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSidebarOpen(false)}
-            view={view}
-            setView={setView}
+    <div className="w-full h-full p-6 space-y-6">
+      {/* Toolbar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+        {/* Search */}
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search cards..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 transition-colors"
           />
-        </aside>
-        
-        <main className="lg:col-span-3 xl:col-span-4 px-4 sm:px-6 lg:px-8 py-8">
-          {view === 'listings' ? (
-            <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
-          ) : (
-            <HoldingsGrid holdings={holdings} loading={loading} error={error} />
-          )}
-        </main>
+        </div>
+
+        {/* Filters & Sort */}
+        <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+          {/* Filter Pills */}
+          <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/10">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'autobuy', label: 'Gold', color: 'text-yellow-400' },
+              { id: 'alert', label: 'Red', color: 'text-red-400' },
+              { id: 'info', label: 'Blue', color: 'text-sky-400' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setFilter(item.id)}
+                className={`
+                  px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                  ${filter === item.id
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }
+                  ${item.color && filter === item.id ? item.color : ''}
+                `}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="relative min-w-[160px]">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <ArrowUpDown className="w-4 h-4 text-gray-400" />
+            </div>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
+            >
+              <option value="listed-time">Newest Listed</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="difference-percent">Best Value</option>
+              <option value="popularity">Popularity</option>
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <Filter className="w-3 h-3 text-gray-400" />
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <Footer />
+
+      {/* Grid */}
+      <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
     </div>
   )
 }
