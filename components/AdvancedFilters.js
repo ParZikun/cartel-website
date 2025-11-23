@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Sliders, X, DollarSign, Award, Tag } from 'lucide-react'
 
 export default function AdvancedFilters({ filters, onFilterChange, onClearFilters }) {
@@ -55,7 +56,7 @@ export default function AdvancedFilters({ filters, onFilterChange, onClearFilter
             </button>
 
             {/* Filter Panel */}
-            {isOpen && (
+            {isOpen && createPortal(
                 <>
                     {/* Backdrop */}
                     <div
@@ -193,7 +194,8 @@ export default function AdvancedFilters({ filters, onFilterChange, onClearFilter
                             </div>
                         </div>
                     </div>
-                </>
+                </>,
+                document.body
             )}
         </>
     )
