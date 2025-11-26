@@ -117,21 +117,17 @@ export default function Card({ listing, solPriceUSD, priority }) {
     };
 
     return (
-        <div className={`group relative bg-[#13111a] rounded-xl border border-white/5 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:${styles.glow} hover:${styles.border}`}>
-
-            {/* Image Section with Overlay */}
-            <div className="relative aspect-[3/4] w-full bg-[#0c0a15]">
-                <Image
-                    src={listing.img_url || 'https://placehold.co/300x420/0c0a15/2d3748?text=N/A'}
-                    alt={listing.name}
-                    fill
-                    className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-                    priority={priority}
-                />
-
-                {/* Category Badge (Top Left) */}
-                <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shadow-lg ${styles.badge}`}>
-                    {listing.cartel_category}
+        <div className={`card-glass rounded-xl shadow-lg flex flex-col transition-all duration-300 ${listing.cartel_category === 'AUTOBUY' ? 'holo-gold' : 'card-glow'}`} style={{'--glow-color': categoryStyle.glow, '--border-color': categoryStyle.border, '--border-color-hover': categoryStyle.hover}}>
+            <div className="relative">
+                <Image src={listing.img_url || 'https://placehold.co/300x420/0c0a15/2d3748?text=N/A'} alt={listing.name} width={300} height={420} className="h-72 w-full object-contain rounded-t-xl pt-4 bg-black/20" priority={priority} placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" />
+            </div>
+            
+            <div className="p-4 flex flex-col flex-grow">
+                <h3 className="font-bold text-white text-base leading-tight truncate mb-1" title={listing.name}>{listing.name}</h3>
+                
+                <div className="flex justify-between items-center text-xs text-gray-400 mb-3">
+                    <span>{listing.grade || 'N/A'}</span>
+                    <span className="font-mono">Pop: {listing.supply != null ? listing.supply : 'N/A'}</span>
                 </div>
 
                 {/* Gradient Overlay */}
@@ -164,29 +160,20 @@ export default function Card({ listing, solPriceUSD, priority }) {
                         <div className="text-base font-bold text-white mt-0.5">{listing.price_amount?.toFixed(4)}</div>
                         <p className="text-[9px] text-gray-500 font-mono">~${listingPriceUSD?.toFixed(2)}</p>
                     </div>
-
-                    {/* Difference */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Difference</p>
-                        <div className={`text-base font-bold mt-0.5 ${diffPercent > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {diffPercent ? `${diffPercent > 0 ? '+' : ''}${diffPercent.toFixed(2)}%` : '-'}
-                        </div>
-                        <p className="text-[9px] text-gray-500 font-mono">vs Alt</p>
+                    <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
+                        <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><TrendingDown className="w-3 h-3" />Difference</p>
+                        <p className={`font-mono text-lg font-semibold ${differenceColor}`}>{diffPercent != null ? `${diffPercent.toFixed(2)}%` : 'N/A'}</p>
+                        <p className="font-mono text-xs text-gray-500">&nbsp;</p>
                     </div>
-
-                    {/* Alt Value */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><Tag className="w-3 h-3" /> ALT Value</p>
-                        <div className="text-base font-bold text-green-400 mt-0.5">${listing.alt_value ? Number(listing.alt_value).toFixed(2) : '-'}</div>
-                        <p className="text-[9px] text-gray-500 font-mono truncate">
-                            {listing.alt_value_lower_bound ? `${Number(listing.alt_value_lower_bound).toFixed(2)} - ${Number(listing.alt_value_upper_bound).toFixed(2)}` : ''}
-                        </p>
+                    <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
+                        <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><Tag className="w-3 h-3" />ALT Value</p>
+                        <p className={`font-mono text-lg ${altConfidenceColor}`}>{listing.alt_value != null ? `${listing.alt_value.toFixed(2)}` : 'N/A'}</p>
+                        <p className="font-mono text-xs text-gray-500">{(listing.alt_value_lower_bound != null && listing.alt_value_upper_bound != null) ? `${listing.alt_value_lower_bound.toFixed(2)} - ${listing.alt_value_upper_bound.toFixed(2)}` : 'N/A'}</p>
                     </div>
-
-                    {/* Cartel Avg */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><BarChart4 className="w-3 h-3" /> Cartel AVG</p>
-                        <div className="text-base font-bold text-white mt-0.5">${listing.avg_price ? Number(listing.avg_price).toFixed(2) : '-'}</div>
+                    <div className="bg-black/20 p-2 rounded-md border border-gray-700/50 text-center">
+                        <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><BarChart4 className="w-3 h-3" />Cartel AVG</p>
+                        <p className="font-mono text-lg text-white">{listing.avg_price != null ? `${listing.avg_price.toFixed(2)}` : 'N/A'}</p>
+                         <p className="font-mono text-xs text-gray-500">&nbsp;</p>
                     </div>
                 </div>
 

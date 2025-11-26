@@ -7,7 +7,7 @@ import { UIProvider } from '../context/UIContext';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import localFont from 'next/font/local';
-import { Toaster } from 'sonner';
+import Sidebar from './components/Sidebar';
 
 const pokemonHollow = localFont({
   src: '../public/pokemon-hollow.ttf',
@@ -22,23 +22,15 @@ const pokemonSolid = localFont({
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${pokemonHollow.variable} ${pokemonSolid.variable}`}>
-      <body>
-        <Toaster position="top-right" richColors closeButton />
+      <body className="bg-gray-900">
         <SolanaProvider>
           <TransactionProvider>
-            <UIProvider>
-              <div className="min-h-screen">
-                <Navbar />
-                <div className="flex pt-20">
-                  <Sidebar />
-                  <main className="flex-1 lg:pl-64">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                      {children}
-                    </div>
-                  </main>
-                </div>
-              </div>
-            </UIProvider>
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 ml-64">
+                {children}
+              </main>
+            </div>
           </TransactionProvider>
         </SolanaProvider>
       </body>

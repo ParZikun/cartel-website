@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ListingGrid from './components/ListingGrid'
 import { getSolPriceUsd } from './live/priceService'
 import { Search, Filter, ArrowUpDown } from 'lucide-react'
@@ -15,12 +15,10 @@ export default function Home() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('listed-time')
+  const [timeFilter, setTimeFilter] = useState('all')
   const [solPriceUSD, setSolPriceUSD] = useState(null)
-  const [advancedFilters, setAdvancedFilters] = useState({
-    priceRange: { min: '', max: '' },
-    grades: [],
-    categories: []
-  })
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [apiStatus, setApiStatus] = useState('loading')
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -47,6 +45,8 @@ export default function Home() {
         }
         const data = await response.json();
         setListings(data);
+        setApiStatus('live');
+        setLastUpdated(new Date());
       } catch (e) {
         setError(e.message);
         toast.error('Failed to load listings', {
@@ -60,25 +60,19 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const handleClearFilters = useCallback(() => {
-    setAdvancedFilters({
-      priceRange: { min: '', max: '' },
-      grades: [],
-      categories: []
-    });
-    toast.success('Filters cleared');
-  }, []);
-
   const filteredAndSortedListings = useMemo(() => {
-    return listings
+    const now = new Date();
+    const timeFilteredListings = listings.filter(listing => {
+      if (timeFilter === 'all') return true;
+      const listedAt = new Date(listing.listed_at);
+      const diffHours = (now - listedAt) / (1000 * 60 * 60);
+      if (timeFilter === '1h') return diffHours <= 1;
+      if (timeFilter === '6h') return diffHours <= 6;
+      if (timeFilter === '24h') return diffHours <= 24;
+      return true;
+    });
+
+    return timeFilteredListings
       .map(listing => {
         const listingPriceUSD = listing.price_amount ? listing.price_amount * solPriceUSD : null;
         const diffPercent = (listingPriceUSD && listing.alt_value > 0) ? (((listingPriceUSD - listing.alt_value) / listing.alt_value) * 100) : null;
@@ -130,72 +124,57 @@ export default function Home() {
             return new Date(b.listed_at) - new Date(a.listed_at);
         }
       });
-  }, [listings, debouncedSearch, filter, sort, solPriceUSD, advancedFilters]);
+  }, [listings, searchQuery, filter, sort, timeFilter, solPriceUSD]);
 
   return (
-    <div className="w-full h-full p-6 space-y-6">
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-        {/* Search */}
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search cards..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black/40 border border-white/10 rounded-2xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 transition-colors"
-          />
-        </div>
-
-        {/* Filters & Sort */}
-        <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-          {/* Advanced Filters */}
-          <AdvancedFilters
-            filters={advancedFilters}
-            onFilterChange={setAdvancedFilters}
-            onClearFilters={handleClearFilters}
-          />
-
-          {/* Filter Dropdown */}
-          <div className="relative min-w-[140px]">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <Filter className="w-4 h-4 text-gray-400" />
+    <div className="w-full h-full">
+      {/* Header/Controls Bar */}
+      <div className="p-4 bg-primary-bg border-b border-gray-700">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full md:w-64 bg-gray-800 border border-gray-700 rounded-md py-2 px-4 mb-2 md:mb-0"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <select value={filter} onChange={(e) => setFilter(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4">
+                <option value="all">All Categories</option>
+                <option value="autobuy">Autobuy</option>
+                <option value="alert">Alert</option>
+                <option value="info">Info</option>
+              </select>
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4">
+                <option value="listed-time">Newest</option>
+                <option value="price-low">Price: Low-High</option>
+                <option value="price-high">Price: High-Low</option>
+                <option value="difference-percent">Difference %</option>
+                <option value="popularity">Popularity</option>
+              </select>
+              <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-md py-2 px-4 col-span-2 md:col-span-1">
+                <option value="all">All Time</option>
+                <option value="1h">Last 1h</option>
+                <option value="6h">Last 6h</option>
+                <option value="24h">Last 24h</option>
+              </select>
             </div>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
-            >
-              <option value="all">All Deals</option>
-              <option value="autobuy">Auto Buy</option>
-              <option value="alert">Good Deals</option>
-              <option value="info">Info</option>
-            </select>
           </div>
-
-          {/* Sort Dropdown */}
-          <div className="relative min-w-[160px]">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <ArrowUpDown className="w-4 h-4 text-gray-400" />
-            </div>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
-            >
-              <option value="listed-time">Newest First</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="difference-percent">Best Deals</option>
-              <option value="popularity">Popularity</option>
-            </select>
+          <div className="flex items-center justify-end space-x-4 mt-2 md:mt-0 text-sm">
+              <div className="flex items-center space-x-2">
+                <span className={`h-3 w-3 rounded-full ${apiStatus === 'live' ? 'bg-green-500' : apiStatus === 'loading' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                <span>{apiStatus}</span>
+              </div>
+              {lastUpdated && <span>Updated: {lastUpdated.toLocaleTimeString()}</span>}
           </div>
         </div>
       </div>
 
-      {/* Grid */}
-      <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
+      {/* Main Content */}
+      <main className="overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <ListingGrid listings={filteredAndSortedListings} loading={loading} error={error} solPriceUSD={solPriceUSD} />
+      </main>
     </div>
   )
 }
