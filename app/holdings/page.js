@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Search, ArrowUpDown, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 import HoldingsCard from '../components/HoldingsCard';
@@ -19,7 +19,7 @@ export default function HoldingsPage() {
         hasMore: true
     });
 
-    const fetchHoldings = async (offset = 0, page = 1) => {
+    const fetchHoldings = useCallback(async (offset = 0, page = 1) => {
         setLoading(true);
         setError(null);
 
@@ -72,11 +72,11 @@ export default function HoldingsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [pagination.limit]);
 
     useEffect(() => {
         fetchHoldings(0, 1);
-    }, []);
+    }, [fetchHoldings]);
 
     const handlePageChange = (newPage) => {
         const newOffset = (newPage - 1) * pagination.limit;
@@ -125,7 +125,7 @@ export default function HoldingsPage() {
                     </div>
                     <h3 className="text-xl font-medium text-white mb-2">No Holdings Found</h3>
                     <p className="text-gray-400 max-w-sm">
-                        We couldn't find any Pokemon cards in your connected wallet.
+                        We couldn&apos;t find any Pokemon cards in your connected wallet.
                     </p>
                 </div>
             ) : (

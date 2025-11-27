@@ -236,7 +236,7 @@ export default function InspectPage() {
                         </div>
                         <h3 className="text-2xl font-bold text-white mb-2">No Card Found</h3>
                         <p className="text-gray-400 max-w-md">
-                            We couldn't find a card matching that Mint Address or Grading ID in our database.
+                            We couldn&apos;t find a card matching that Mint Address or Grading ID in our database.
                         </p>
                     </div>
                 ) : (
