@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Briefcase, Shield, Settings, X } from 'lucide-react'
+import { Home, Briefcase, Shield, Settings, X, Eye } from 'lucide-react'
 import { useUI } from '../context/UIContext'
 
 const navigation = [
     { name: 'Deals', href: '/', icon: Home },
     { name: 'Holdings', href: '/holdings', icon: Briefcase },
+    { name: 'Inspect', href: '/inspect', icon: Eye },
     { name: 'Admin', href: '/admin', icon: Shield },
     { name: 'Settings', href: '/settings', icon: Settings },
 ]
