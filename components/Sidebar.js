@@ -21,19 +21,19 @@ export default function Sidebar() {
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
                     onClick={closeSidebar}
                 />
             )}
 
             {/* Sidebar */}
             <div className={`
-                fixed inset-y-0 left-0 z-40 w-64 glass border-r border-accent-gold/20 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:fixed lg:flex lg:flex-col
+                fixed inset-y-0 left-0 z-[60] w-64 glass border-r border-accent-gold/20 transform transition-transform duration-300 ease-in-out flex flex-col
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
                 <div className="flex-1 flex flex-col pt-24 pb-4 overflow-y-auto">
                     {/* Mobile Close Button */}
-                    <div className="lg:hidden absolute top-4 right-4">
+                    <div className="absolute top-4 right-4">
                         <button onClick={closeSidebar} className="p-2 text-gray-400 hover:text-white">
                             <X className="w-6 h-6" />
                         </button>

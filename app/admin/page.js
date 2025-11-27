@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, RefreshCw, Database, ChevronLeft, ChevronRight, X, Eye, CheckCircle, AlertCircle, Clock, Copy, BarChart4 } from 'lucide-react';
+import { Search, RefreshCw, Database, ChevronLeft, ChevronRight, X, Eye, CheckCircle, AlertCircle, Clock, Copy, BarChart4, Tag, Users, Package } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { getConfidenceColor } from '../utils/format';
 
 export default function AdminPage() {
     const [listings, setListings] = useState([]);
@@ -51,33 +52,9 @@ export default function AdminPage() {
     return (
         <div className="w-full h-full p-6 space-y-6 relative">
             {/* Top Action Bar */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                {/* Search */}
-                <div className="relative w-full md:w-96">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Find Card by Mint ID..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-base text-white focus:outline-none focus:border-accent-gold/50 transition-colors"
-                    />
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <button
-                        onClick={() => fetchData(pagination.page)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors font-medium"
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                        <span>Refresh</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors font-medium">
-                        <Database className="w-4 h-4" />
-                        <span>Full Database Sync</span>
-                    </button>
-                </div>
+            {/* Top Action Bar - REMOVED as per user request */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm hidden">
+                {/* Content removed */}
             </div>
 
             {/* Data Table */}
@@ -86,13 +63,13 @@ export default function AdminPage() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-black/40 border-b border-white/10 text-gray-400 text-sm uppercase tracking-wider">
-                                <th className="p-4 font-medium">Name / Mint</th>
-                                <th className="p-4 font-medium">Alt Value</th>
-                                <th className="p-4 font-medium">Price (SOL / USD)</th>
-                                <th className="p-4 font-medium">Status</th>
-                                <th className="p-4 font-medium">Cartel Tier</th>
-                                <th className="p-4 font-medium">Last Scan</th>
-                                <th className="p-4 font-medium text-right">Actions</th>
+                                <th className="p-2 md:p-4 font-medium">Name / Mint</th>
+                                <th className="p-2 md:p-4 font-medium hidden md:table-cell">Alt Value</th>
+                                <th className="p-2 md:p-4 font-medium">Price (SOL / USD)</th>
+                                <th className="p-2 md:p-4 font-medium">Status</th>
+                                <th className="p-2 md:p-4 font-medium hidden md:table-cell">Cartel Tier</th>
+                                <th className="p-2 md:p-4 font-medium hidden lg:table-cell">Last Scan</th>
+                                <th className="p-2 md:p-4 font-medium text-right hidden sm:table-cell">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -106,12 +83,12 @@ export default function AdminPage() {
                                     onClick={() => setSelectedItem(item)}
                                     className="hover:bg-white/5 transition-colors cursor-pointer group"
                                 >
-                                    <td className="p-4">
+                                    <td className="p-2 md:p-4 max-w-[120px] sm:max-w-none">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-white">{item.name || 'Unknown Item'}</span>
+                                            <span className="font-bold text-white line-clamp-2 text-sm md:text-base">{item.name || 'Unknown Item'}</span>
                                             <button
                                                 onClick={(e) => copyToClipboard(e, item.token_mint)}
-                                                className="font-mono text-xs text-gray-500 hover:text-accent-gold transition-colors text-left flex items-center gap-1"
+                                                className="font-mono text-[10px] md:text-xs text-gray-500 hover:text-accent-gold transition-colors text-left flex items-center gap-1 mt-1"
                                                 title="Click to copy mint"
                                             >
                                                 {item.token_mint ? `${item.token_mint.substring(0, 6)}...` : 'No Mint'}
@@ -119,18 +96,18 @@ export default function AdminPage() {
                                             </button>
                                         </div>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-2 md:p-4 hidden md:table-cell">
                                         <span className="font-mono text-white">{item.alt_value != null ? Number(item.alt_value).toFixed(2) : '-'}</span>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-2 md:p-4">
                                         <div className="flex flex-col">
-                                            <span className="font-mono text-accent-gold">{item.price_amount != null ? Number(item.price_amount).toFixed(2) : '0.00'} SOL</span>
-                                            <span className="text-xs text-gray-500">≈ ${(item.price_amount * 150).toFixed(2)}</span>
+                                            <span className="font-mono text-accent-gold text-sm md:text-base">{item.price_amount != null ? Number(item.price_amount).toFixed(2) : '0.00'} SOL</span>
+                                            <span className="text-[10px] md:text-xs text-gray-500">≈ ${(item.price_amount * 150).toFixed(2)}</span>
                                         </div>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-2 md:p-4">
                                         <span className={`
-                                            inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                            inline-flex items-center px-2 py-0.5 md:px-2.5 rounded-full text-[10px] md:text-xs font-medium border whitespace-nowrap
                                             ${item.is_listed
                                                 ? 'bg-green-500/10 text-green-400 border-green-500/20'
                                                 : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}
@@ -138,9 +115,9 @@ export default function AdminPage() {
                                             {item.is_listed ? 'Listed' : 'Unlisted'}
                                         </span>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-2 md:p-4 hidden md:table-cell">
                                         <span className={`
-                                            inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                            inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap
                                             ${item.cartel_category === 'AUTOBUY'
                                                 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                                                 : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}
@@ -149,13 +126,13 @@ export default function AdminPage() {
                                             {item.cartel_category || 'N/A'}
                                         </span>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-2 md:p-4 hidden lg:table-cell">
                                         <div className="flex items-center gap-2 text-gray-400 text-sm">
                                             <Clock className="w-3 h-3" />
                                             <span className="font-mono">{item.listed_at ? new Date(item.listed_at).toLocaleTimeString() : '-'}</span>
                                         </div>
                                     </td>
-                                    <td className="p-4 text-right">
+                                    <td className="p-2 md:p-4 text-right hidden sm:table-cell">
                                         <button className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
                                             <Eye className="w-4 h-4" />
                                         </button>
@@ -191,208 +168,158 @@ export default function AdminPage() {
                 </div>
             </div>
 
-            {/* Inspection Panel (Pokedex-Style Slide-Over) */}
+            {/* Inspection Panel (Polished Design V2) */}
             <div
                 className={`
-                    fixed inset-y-0 right-0 w-full md:w-[700px] bg-gradient-to-br from-[#0c0a15] via-[#1a1625] to-[#0c0a15] border-l-2 border-accent-gold/30 shadow-2xl transform transition-transform duration-300 ease-in-out z-50
+                    fixed inset-y-0 right-0 w-full md:w-[800px] bg-[#0c0a15]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl transform transition-transform duration-300 ease-in-out z-[60]
                     ${selectedItem ? 'translate-x-0' : 'translate-x-full'}
                 `}
             >
-                <div className="h-full flex flex-col relative overflow-hidden">
-                    {/* Pokedex Header with Scanline Effect */}
-                    <div className="relative p-6 border-b-2 border-accent-gold/20 bg-black/40">
-                        <div className="absolute inset-0 bg-gradient-to-r from-accent-gold/5 via-transparent to-accent-gold/5 animate-pulse"></div>
-                        <div className="relative flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-accent-gold/20 border-2 border-accent-gold flex items-center justify-center">
-                                    <Database className="w-6 h-6 text-accent-gold" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold text-accent-gold tracking-wide">CARD DATABASE</h2>
-                                    <p className="text-xs text-gray-400 font-mono mt-1">ID: {selectedItem?.token_mint?.substring(0, 8)}...</p>
-                                </div>
-                            </div>
+                {selectedItem && (
+                    <div className="h-full flex flex-col p-6 md:p-8 overflow-y-auto md:overflow-hidden">
+                        {/* Header: Title & Close */}
+                        <div className="flex items-start justify-between mb-6">
+                            <h2 className="text-xl md:text-2xl font-bold text-white leading-tight max-w-lg drop-shadow-md pr-4">{selectedItem.name}</h2>
                             <button
                                 onClick={() => setSelectedItem(null)}
-                                className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                className="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all hover:rotate-90 duration-300 flex-shrink-0"
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
+
+                        {/* Content Grid */}
+                        <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8 overflow-visible md:overflow-hidden">
+                            {/* Left Col: Image */}
+                            <div className="md:col-span-5 relative h-[400px] md:h-full md:max-h-[500px] rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/5 to-transparent shadow-2xl group flex-shrink-0">
+                                <div className="absolute inset-0 bg-accent-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <Image
+                                    src={selectedItem.img_url || 'https://placehold.co/300x420/0c0a15/2d3748?text=No+Image'}
+                                    alt={selectedItem.name || 'Card'}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 40vw"
+                                    className="object-contain p-4 transition-transform duration-500 group-hover:scale-105 w-auto h-auto"
+                                />
+                            </div>
+
+                            {/* Right Col: Data */}
+                            <div className="md:col-span-7 space-y-6 md:overflow-y-auto pr-2 custom-scrollbar">
+
+                                {/* Meta Info Section (Moved Above Metrics) */}
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10 shadow-inner max-w-full overflow-hidden">
+                                            <span className="text-sm font-mono text-accent-gold tracking-wider truncate">
+                                                {selectedItem.token_mint}
+                                            </span>
+                                            <button
+                                                onClick={(e) => copyToClipboard(e, selectedItem.token_mint)}
+                                                className="p-1 hover:bg-white/10 rounded-md transition-colors text-gray-400 hover:text-white"
+                                                title="Copy Mint"
+                                            >
+                                                <Copy className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                        <div className="flex gap-2">
+                                            <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg border ${selectedItem.is_listed ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+                                                {selectedItem.is_listed ? 'Listed' : 'Unlisted'}
+                                            </span>
+                                            <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg border ${selectedItem.cartel_category === 'AUTOBUY' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
+                                                {selectedItem.cartel_category || 'N/A'}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <a href={selectedItem.alt_asset_id ? `https://app.alt.xyz/research/${selectedItem.alt_asset_id}` : '#'} target="_blank" className="opacity-70 hover:opacity-100 hover:scale-110 transition-all border border-accent-gold rounded-full p-1 bg-black/40 backdrop-blur-sm" title="ALT.xyz">
+                                                <Image src="https://cdn.prod.website-files.com/62829b28e6300b34ff739f02/629661dd02bdba04fb424173_ALT-white-logo.png" width={20} height={20} alt="ALT" />
+                                            </a>
+                                            <a href={`https://collectorcrypt.com/assets/solana/${selectedItem.token_mint}`} target="_blank" className="opacity-70 hover:opacity-100 hover:scale-110 transition-all border border-accent-gold rounded-full p-1 bg-black/40 backdrop-blur-sm" title="Collector Crypt">
+                                                <Image src="https://www.marketbeat.com/logos/cryptocurrencies/collector-crypt-CARDS.png?v=2025-09-12" width={20} height={20} className="rounded-full bg-white p-[1px]" alt="CC" />
+                                            </a>
+                                            <a href={`https://magiceden.io/item-details/${selectedItem.token_mint}`} target="_blank" className="opacity-70 hover:opacity-100 hover:scale-110 transition-all border border-accent-gold rounded-full p-1 bg-black/40 backdrop-blur-sm" title="Magic Eden">
+                                                <Image src="https://cdn.prod.website-files.com/614c99cf4f23700c8aa3752a/637db1043720a3ea88e4ea96_public.png" width={20} height={20} alt="ME" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Key Metrics (Darker & Icons) */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="p-4 rounded-xl bg-[#0c0a15] border border-white/10 hover:border-white/20 transition-colors group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                                            <Tag className="w-6 h-6 text-gray-400" />
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1 group-hover:text-white transition-colors">Price</p>
+                                        <p className="text-2xl font-bold text-white">{Number(selectedItem.price_amount).toFixed(2)} <span className="text-sm text-gray-500 font-normal">SOL</span></p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-[#0c0a15] border border-green-500/20 hover:border-green-500/40 transition-colors group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                                            <BarChart4 className="w-6 h-6 text-green-500" />
+                                        </div>
+                                        <p className="text-[10px] text-green-400 uppercase tracking-wider font-bold mb-1">Alt Value</p>
+                                        <p className="text-2xl font-bold text-green-400">${Number(selectedItem.alt_value).toFixed(2)}</p>
+                                        <p className="text-xs text-green-500/60 font-mono mt-1">
+                                            (${Number(selectedItem.alt_value_lower_bound).toFixed(0)} - ${Number(selectedItem.alt_value_upper_bound).toFixed(0)})
+                                        </p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-[#0c0a15] border border-accent-gold/20 hover:border-accent-gold/40 transition-colors group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                                            <Users className="w-6 h-6 text-accent-gold" />
+                                        </div>
+                                        <p className="text-[10px] text-accent-gold uppercase tracking-wider font-bold mb-1">Cartel Avg</p>
+                                        <p className="text-2xl font-bold text-accent-gold">${Number(selectedItem.avg_price).toFixed(2)}</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-[#0c0a15] border border-purple-500/20 hover:border-purple-500/40 transition-colors group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                                            <Package className="w-6 h-6 text-purple-400" />
+                                        </div>
+                                        <p className="text-[10px] text-purple-400 uppercase tracking-wider font-bold mb-1">Supply</p>
+                                        <p className="text-2xl font-bold text-purple-400">{selectedItem.supply || '-'}</p>
+                                    </div>
+                                </div>
+
+                                {/* Dense Details Table */}
+                                <div className="rounded-xl border border-white/10 overflow-hidden bg-black/20">
+                                    <table className="w-full text-sm">
+                                        <tbody className="divide-y divide-white/5">
+                                            <tr className="hover:bg-white/5 transition-colors">
+                                                <td className="p-3 text-gray-500 text-xs font-medium uppercase tracking-wide pl-4">Grade</td>
+                                                <td className="p-3 text-white text-right font-bold pr-4">{selectedItem.grading_company} {selectedItem.grade}</td>
+                                            </tr>
+                                            <tr className="hover:bg-white/5 transition-colors">
+                                                <td className="p-3 text-gray-500 text-xs font-medium uppercase tracking-wide pl-4">Cert ID</td>
+                                                <td className="p-3 text-white text-right font-mono text-xs pr-4">{selectedItem.grading_id}</td>
+                                            </tr>
+                                            <tr className="hover:bg-white/5 transition-colors">
+                                                <td className="p-3 text-gray-500 text-xs font-medium uppercase tracking-wide pl-4">Confidence</td>
+                                                <td className="p-3 text-white text-right pr-4">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${Number(selectedItem.alt_value_confidence) > 80 ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                                        {selectedItem.alt_value_confidence}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr className="hover:bg-white/5 transition-colors">
+                                                <td className="p-3 text-gray-500 text-xs font-medium uppercase tracking-wide pl-4">Insured</td>
+                                                <td className="p-3 text-white text-right font-mono pr-4">${selectedItem.insured_value}</td>
+                                            </tr>
+                                            <tr className="hover:bg-white/5 transition-colors">
+                                                <td className="p-3 text-gray-500 text-xs font-medium uppercase tracking-wide pl-4">Listed</td>
+                                                <td className="p-3 text-white text-right text-xs pr-4">{selectedItem.listed_at ? new Date(selectedItem.listed_at).toLocaleDateString() : '-'}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                        {selectedItem && (
-                            <>
-                                {/* Card Display Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Image */}
-                                    <div className="relative group">
-                                        <div className="absolute inset-0 bg-accent-gold/20 rounded-xl blur-xl group-hover:blur-2xl transition-all"></div>
-                                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden border-2 border-accent-gold/30 bg-black/40 shadow-2xl">
-                                            <Image
-                                                src={selectedItem.img_url || 'https://placehold.co/300x420/0c0a15/2d3748?text=No+Image'}
-                                                alt={selectedItem.name || 'Card'}
-                                                fill
-                                                className="object-contain p-2"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Main Info */}
-                                    <div className="space-y-4">
-                                        <div>
-                                            <h3 className="text-2xl font-bold text-white leading-tight mb-2">{selectedItem.name}</h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className={`
-                                                    px-3 py-1 rounded-full text-xs font-bold border-2
-                                                    ${selectedItem.is_listed
-                                                        ? 'bg-green-500/20 text-green-400 border-green-500/40'
-                                                        : 'bg-gray-500/20 text-gray-400 border-gray-500/40'}
-                                                `}>
-                                                    {selectedItem.is_listed ? '● LISTED' : '○ UNLISTED'}
-                                                </span>
-                                                <span className={`
-                                                    px-3 py-1 rounded-full text-xs font-bold border-2
-                                                    ${selectedItem.cartel_category === 'AUTOBUY'
-                                                        ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'
-                                                        : selectedItem.cartel_category === 'GOOD'
-                                                            ? 'bg-red-500/20 text-red-400 border-red-500/40'
-                                                            : 'bg-purple-500/20 text-purple-400 border-purple-500/40'}
-                                                `}>
-                                                    {selectedItem.cartel_category || 'N/A'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Price & Value Grid */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="p-4 rounded-lg bg-gradient-to-br from-accent-gold/10 to-accent-gold/5 border border-accent-gold/30">
-                                                <p className="text-xs text-accent-gold/70 uppercase tracking-wider font-bold mb-1">Listing Price</p>
-                                                <p className="text-2xl font-mono text-accent-gold font-bold">{Number(selectedItem.price_amount).toFixed(2)}</p>
-                                                <p className="text-xs text-accent-gold/50 font-mono">SOL</p>
-                                            </div>
-                                            <div className="p-4 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
-                                                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">ALT Value</p>
-                                                <p className="text-2xl font-mono text-white font-bold">{Number(selectedItem.alt_value).toFixed(2)}</p>
-                                                <p className="text-xs text-gray-500 font-mono">USD</p>
-                                            </div>
-                                            <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/30">
-                                                <p className="text-xs text-blue-400 uppercase tracking-wider font-bold mb-1">Cartel AVG</p>
-                                                <p className="text-xl font-mono text-blue-300 font-bold">{Number(selectedItem.avg_price).toFixed(2)}</p>
-                                                <p className="text-xs text-blue-500/70 font-mono">USD</p>
-                                            </div>
-                                            <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/30">
-                                                <p className="text-xs text-purple-400 uppercase tracking-wider font-bold mb-1">Supply</p>
-                                                <p className="text-xl font-mono text-purple-300 font-bold">{selectedItem.supply || 'N/A'}</p>
-                                                <p className="text-xs text-purple-500/70 font-mono">POP</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Grading Information */}
-                                <div className="p-4 rounded-xl bg-black/40 border border-white/10">
-                                    <h4 className="text-sm font-bold text-accent-gold uppercase tracking-wider mb-3 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4" />
-                                        Grading Information
-                                    </h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Company</p>
-                                            <p className="text-sm text-white font-bold">{selectedItem.grading_company || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Grade</p>
-                                            <p className="text-sm text-white font-bold">{selectedItem.grade || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Grade #</p>
-                                            <p className="text-sm text-white font-mono">{selectedItem.grade_num || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Cert ID</p>
-                                            <p className="text-sm text-white font-mono">{selectedItem.grading_id || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* ALT Data Section */}
-                                <div className="p-4 rounded-xl bg-gradient-to-br from-accent-gold/5 to-transparent border border-accent-gold/20">
-                                    <h4 className="text-sm font-bold text-accent-gold uppercase tracking-wider mb-3 flex items-center gap-2">
-                                        <BarChart4 className="w-4 h-4" />
-                                        ALT.xyz Analytics
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Value Range</p>
-                                            <p className="text-sm text-white font-mono">
-                                                ${Number(selectedItem.alt_value_lower_bound).toFixed(2)} - ${Number(selectedItem.alt_value_upper_bound).toFixed(2)}
-                                            </p>
-                                        </div>
-                                        <div className="p-3 rounded-lg bg-black/40 border border-white/5">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Confidence</p>
-                                            <p className="text-sm text-white font-bold">{selectedItem.alt_value_confidence || 'N/A'}%</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg bg-black/40 border border-white/5 col-span-2">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Asset ID</p>
-                                            <p className="text-sm text-white font-mono truncate">{selectedItem.alt_asset_id || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Additional Details */}
-                                <div className="p-4 rounded-xl bg-black/40 border border-white/10">
-                                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                        <Database className="w-4 h-4" />
-                                        Additional Details
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="p-3 rounded-lg bg-black/20 border border-white/5">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Category</p>
-                                            <p className="text-sm text-white">{selectedItem.category || 'N/A'}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg bg-black/20 border border-white/5">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Insured Value</p>
-                                            <p className="text-sm text-white font-mono">${selectedItem.insured_value || 'N/A'}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg bg-black/20 border border-white/5">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Listed At</p>
-                                            <p className="text-sm text-white font-mono">{selectedItem.listed_at ? new Date(selectedItem.listed_at).toLocaleString() : 'N/A'}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg bg-black/20 border border-white/5">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Last Analyzed</p>
-                                            <p className="text-sm text-white font-mono">{selectedItem.last_analyzed_at ? new Date(selectedItem.last_analyzed_at).toLocaleString() : 'N/A'}</p>
-                                        </div>
-                                        <div className="p-3 rounded-lg bg-black/20 border border-white/5 col-span-2">
-                                            <p className="text-xs text-gray-500 uppercase mb-1">Listing ID</p>
-                                            <p className="text-sm text-white font-mono truncate">{selectedItem.listing_id || 'N/A'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="p-6 border-t-2 border-accent-gold/20 bg-black/40 flex gap-3">
-                        <button className="flex-1 py-3 rounded-lg bg-gradient-to-r from-accent-gold to-yellow-600 text-black font-bold hover:from-accent-gold/90 hover:to-yellow-600/90 transition-all shadow-[0_0_20px_-5px_rgba(255,215,0,0.5)] flex items-center justify-center gap-2">
-                            <RefreshCw className="w-4 h-4" />
-                            Open in Explorer
-                        </button>
-                        <button className="flex-1 py-3 rounded-lg bg-white/10 text-white font-bold hover:bg-white/20 transition-colors border border-white/20 flex items-center justify-center gap-2">
-                            <Database className="w-4 h-4" />
-                            Refresh Metadata
-                        </button>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Backdrop for Inspection Panel */}
             {selectedItem && (
                 <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
                     onClick={() => setSelectedItem(null)}
                 />
             )}

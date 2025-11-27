@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Save, Bell, Zap, Percent, Shield, CheckCircle } from 'lucide-react';
+import { Save, Bell, Zap, Percent, Shield, CheckCircle, Database, AlertTriangle } from 'lucide-react';
+
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
     // State
@@ -22,7 +24,20 @@ export default function SettingsPage() {
         // Simulate API call
         setTimeout(() => {
             setIsSaving(false);
+            toast.success('Settings saved successfully');
         }, 1000);
+    };
+
+    const handleFullSync = () => {
+        toast.info('Starting full database sync...');
+        // Simulate sync process
+        setTimeout(() => {
+            toast.success('Full database sync completed');
+        }, 3000);
+    };
+
+    const handleTestNotification = () => {
+        toast.info('This is a test notification');
     };
 
     return (
@@ -225,7 +240,10 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="px-4 py-2 rounded-lg bg-white/5 text-white text-sm font-medium hover:bg-white/10 transition-colors border border-white/10">
+                        <button
+                            onClick={handleTestNotification}
+                            className="px-4 py-2 rounded-lg bg-white/5 text-white text-sm font-medium hover:bg-white/10 transition-colors border border-white/10"
+                        >
                             Test Notification
                         </button>
 
@@ -244,6 +262,45 @@ export default function SettingsPage() {
                             />
                         </button>
                     </div>
+                </div>
+            </section>
+
+            {/* Danger Zone Section */}
+            <section className="glass rounded-2xl p-8 border border-red-500/20 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <AlertTriangle className="w-24 h-24 text-red-500" />
+                </div>
+
+                <h2 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <AlertTriangle className="w-5 h-5 text-red-500" />
+                    </div>
+                    Danger Zone
+                </h2>
+
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-black/20 p-6 rounded-xl border border-red-500/10">
+                    <div className="flex items-start gap-4">
+                        <div className="p-2 rounded-full bg-red-500/10 text-red-500">
+                            <Database className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-medium text-lg">Full Database Sync</h3>
+                            <p className="text-gray-400 text-sm mt-1 max-w-md">
+                                Pulls all data from Magic Eden and the database to recheck all SKIP listings and potential misses.
+                                <span className="block mt-2 text-red-400 font-medium">
+                                    Disclaimer: This process takes time and may delay the scanning and pinging of new deals.
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleFullSync}
+                        className="flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors font-medium whitespace-nowrap"
+                    >
+                        <Database className="w-4 h-4" />
+                        <span>Start Full Sync</span>
+                    </button>
                 </div>
             </section>
         </div>

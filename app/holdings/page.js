@@ -2,19 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Search, ArrowUpDown, Loader } from 'lucide-react';
+import { Search, ArrowUpDown, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 import HoldingsCard from '../components/HoldingsCard';
 import { toast } from 'sonner';
 
 export default function HoldingsPage() {
     const { connected, publicKey } = useWallet();
     const [holdings, setHoldings] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [pagination, setPagination] = useState({ offset: 0, limit: 20, hasMore: true });
+    const [pagination, setPagination] = useState({
+        offset: 0,
+        limit: 20,
+        total: 0,
+        currentPage: 1,
+        hasMore: true
+    });
 
-    const fetchHoldings = async (offset = 0) => {
+    const fetchHoldings = async (offset = 0, page = 1) => {
         setLoading(true);
         setError(null);
 
@@ -47,7 +52,7 @@ export default function HoldingsPage() {
                 grade: item.grade,
                 grade_num: parseInt(item.grade_num) || null,
                 supply: parseInt(item.supply) || null,
-                grading_id: item.grading_id || item.grading_number,
+                grading_id: item.grading_id || item.cert_id || item.certification_number,
                 token_mint: item.mint || item.token_mint,
             }));
 
@@ -55,7 +60,8 @@ export default function HoldingsPage() {
             setPagination(prev => ({
                 ...prev,
                 offset,
-                hasMore: rawHoldings.length === pagination.limit
+                currentPage: page,
+                hasMore: rawHoldings.length === prev.limit
             }));
         } catch (e) {
             console.error("Failed to fetch holdings:", e);
@@ -69,35 +75,41 @@ export default function HoldingsPage() {
     };
 
     useEffect(() => {
-        fetchHoldings(pagination.offset);
+        fetchHoldings(0, 1);
     }, []);
 
-    const filteredHoldings = holdings.filter(item => {
-        const searchLower = searchQuery.toLowerCase();
-        const nameMatch = item.name?.toLowerCase().includes(searchLower);
-        const gradingIdMatch = item.grading_id?.toString().toLowerCase().includes(searchLower);
-        return nameMatch || gradingIdMatch;
-    });
+    const handlePageChange = (newPage) => {
+        const newOffset = (newPage - 1) * pagination.limit;
+        fetchHoldings(newOffset, newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     return (
         <div className="w-full h-full p-6 space-y-6">
             {/* Toolbar */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
-                {/* Search */}
-                <div className="relative w-full md:w-96">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                        type="text"
-                        placeholder="Search your holdings..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 transition-colors"
-                    />
-                </div>
-
                 {/* Results Count */}
                 <div className="text-sm text-gray-400">
-                    {filteredHoldings.length} card{filteredHoldings.length !== 1 ? 's' : ''} found
+                    Showing <span className="font-medium text-white">{(pagination.currentPage - 1) * pagination.limit + 1}</span> to <span className="font-medium text-white">{(pagination.currentPage - 1) * pagination.limit + holdings.length}</span> results
+                </div>
+
+                {/* Pagination Controls (Top) */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => handlePageChange(pagination.currentPage - 1)}
+                        disabled={pagination.currentPage === 1 || loading}
+                        className="p-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-sm text-gray-400 px-2">Page {pagination.currentPage}</span>
+                    <button
+                        onClick={() => handlePageChange(pagination.currentPage + 1)}
+                        disabled={!pagination.hasMore || loading}
+                        className="p-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
@@ -119,30 +131,31 @@ export default function HoldingsPage() {
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                        {filteredHoldings.map((card, index) => (
+                        {holdings.map((card, index) => (
                             <HoldingsCard key={card.token_mint || index} card={card} />
                         ))}
                     </div>
 
-                    {/* Load More Button */}
-                    {pagination.hasMore && holdings.length > 0 && (
-                        <div className="flex justify-center mt-8">
-                            <button
-                                onClick={() => fetchHoldings(pagination.offset + pagination.limit)}
-                                disabled={loading}
-                                className="px-6 py-3 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_-5px_rgba(255,215,0,0.3)] flex items-center gap-2"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader className="w-4 h-4 animate-spin" />
-                                        <span>Loading...</span>
-                                    </>
-                                ) : (
-                                    'Load More'
-                                )}
-                            </button>
-                        </div>
-                    )}
+                    {/* Pagination Controls (Bottom) */}
+                    <div className="flex justify-center items-center gap-4 mt-8">
+                        <button
+                            onClick={() => handlePageChange(pagination.currentPage - 1)}
+                            disabled={pagination.currentPage === 1 || loading}
+                            className="px-4 py-2 rounded-lg bg-black/40 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Previous
+                        </button>
+                        <span className="text-sm text-gray-400">
+                            Page <span className="text-white font-medium">{pagination.currentPage}</span>
+                        </span>
+                        <button
+                            onClick={() => handlePageChange(pagination.currentPage + 1)}
+                            disabled={!pagination.hasMore || loading}
+                            className="px-4 py-2 rounded-lg bg-black/40 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </>
             )}
         </div>

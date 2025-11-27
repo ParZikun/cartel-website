@@ -1,10 +1,12 @@
 import Image from 'next/image';
-import { WalletCards, TrendingDown, Tag, BarChart4, Copy, CheckCircle, XCircle, Loader, ShieldCheck, Hash } from 'lucide-react';
+import { WalletCards, TrendingDown, Tag, BarChart4, Copy, CheckCircle, XCircle, Loader, ShieldCheck, Hash, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useTransaction } from '../context/TransactionContext';
 import { Transaction, VersionedTransaction } from '@solana/web3.js';
+import { getConfidenceColor, getDifferenceColor } from '../utils/format';
+import { toast } from 'sonner';
 
 const getCategoryStyles = (category) => {
     const styles = {
@@ -55,19 +57,24 @@ export default function Card({ listing, solPriceUSD, priority }) {
     const diffPercent = (listingPriceUSD && listing.alt_value > 0) ? (((listingPriceUSD - listing.alt_value) / listing.alt_value) * 100) : null;
     const styles = getCategoryStyles(listing.cartel_category);
 
+    const confidenceColor = getConfidenceColor(listing.alt_value_confidence);
+    const differenceColor = getDifferenceColor(diffPercent);
+
     const copyToClipboard = (e, text) => {
         e.stopPropagation();
         e.preventDefault();
         navigator.clipboard.writeText(text);
+        toast.success('Mint address copied to clipboard');
     };
 
     const handleSnipe = async (e) => {
         e.preventDefault();
         if (!publicKey) {
-            alert('Please connect your wallet first!');
+            toast.error('Please connect your wallet first!');
             return;
         }
         setSnipeState('loading');
+        toast.info('Initiating snipe transaction...');
 
         try {
             const response = await fetch('/api/magiceden/buy', {
@@ -98,11 +105,13 @@ export default function Card({ listing, solPriceUSD, priority }) {
             await connection.confirmTransaction(signature, 'processed');
 
             setSnipeState('success');
+            toast.success('Snipe successful! Transaction confirmed.');
             setTimeout(() => setSnipeState('idle'), 3000);
 
         } catch (error) {
             console.error("Snipe failed:", error);
             setSnipeState('error');
+            toast.error(`Snipe failed: ${error.message}`);
             setTimeout(() => setSnipeState('idle'), 3000);
         }
     };
@@ -125,7 +134,8 @@ export default function Card({ listing, solPriceUSD, priority }) {
                     src={listing.img_url || 'https://placehold.co/300x420/0c0a15/2d3748?text=N/A'}
                     alt={listing.name}
                     fill
-                    className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-contain p-4 transition-transform duration-500 group-hover:scale-105 w-auto h-auto"
                     priority={priority}
                 />
 
@@ -159,34 +169,46 @@ export default function Card({ listing, solPriceUSD, priority }) {
             <div className="p-3 bg-[#13111a]">
                 <div className="grid grid-cols-2 gap-2 mb-3">
                     {/* Price */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><WalletCards className="w-3 h-3" /> Price (SOL)</p>
-                        <div className="text-base font-bold text-white mt-0.5">{listing.price_amount?.toFixed(4)}</div>
-                        <p className="text-[9px] text-gray-500 font-mono">~${listingPriceUSD?.toFixed(2)}</p>
+                    <div className="bg-[#0c0a15] rounded-xl p-3 border border-white/10 group/box relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-1.5 opacity-20 group-hover/box:opacity-40 transition-opacity">
+                            <Tag className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Price</p>
+                        <div className="text-lg font-bold text-white">{listing.price_amount?.toFixed(2)} <span className="text-[10px] text-gray-500 font-normal">SOL</span></div>
+                        <p className="text-[9px] text-gray-500 font-mono">~${listingPriceUSD?.toFixed(0)}</p>
                     </div>
 
                     {/* Difference */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><TrendingDown className="w-3 h-3" /> Difference</p>
-                        <div className={`text-base font-bold mt-0.5 ${diffPercent > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className={`bg-[#0c0a15] rounded-xl p-3 border ${differenceColor.border} group/box relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 p-1.5 opacity-20 group-hover/box:opacity-40 transition-opacity">
+                            <TrendingDown className={`w-4 h-4 ${differenceColor.text}`} />
+                        </div>
+                        <p className={`text-[9px] uppercase tracking-wider font-bold mb-0.5 ${differenceColor.text}`}>Difference</p>
+                        <div className={`text-lg font-bold ${differenceColor.text}`}>
                             {diffPercent ? `${diffPercent > 0 ? '+' : ''}${diffPercent.toFixed(2)}%` : '-'}
                         </div>
-                        <p className="text-[9px] text-gray-500 font-mono">vs Alt</p>
+                        <p className={`text-[9px] opacity-60 ${differenceColor.text}`}>vs Alt</p>
                     </div>
 
                     {/* Alt Value */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><Tag className="w-3 h-3" /> ALT Value</p>
-                        <div className="text-base font-bold text-green-400 mt-0.5">${listing.alt_value ? Number(listing.alt_value).toFixed(2) : '-'}</div>
-                        <p className="text-[9px] text-gray-500 font-mono truncate">
-                            {listing.alt_value_lower_bound ? `${Number(listing.alt_value_lower_bound).toFixed(2)} - ${Number(listing.alt_value_upper_bound).toFixed(2)}` : ''}
+                    <div className={`bg-[#0c0a15] rounded-xl p-3 border ${confidenceColor.border} group/box relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 p-1.5 opacity-20 group-hover/box:opacity-40 transition-opacity">
+                            <BarChart4 className={`w-4 h-4 ${confidenceColor.text}`} />
+                        </div>
+                        <p className={`text-[9px] uppercase tracking-wider font-bold mb-0.5 ${confidenceColor.text}`}>Alt Value</p>
+                        <div className={`text-lg font-bold ${confidenceColor.text}`}>${listing.alt_value ? Number(listing.alt_value).toFixed(2) : '-'}</div>
+                        <p className={`text-[9px] opacity-60 font-mono ${confidenceColor.text} truncate`}>
+                            {listing.alt_value_lower_bound ? `${Number(listing.alt_value_lower_bound).toFixed(0)} - ${Number(listing.alt_value_upper_bound).toFixed(0)}` : ''}
                         </p>
                     </div>
 
                     {/* Cartel Avg */}
-                    <div className="bg-white/5 rounded p-2 border border-white/5">
-                        <p className="text-[9px] text-gray-500 uppercase flex items-center gap-1"><BarChart4 className="w-3 h-3" /> Cartel AVG</p>
-                        <div className="text-base font-bold text-white mt-0.5">${listing.avg_price ? Number(listing.avg_price).toFixed(2) : '-'}</div>
+                    <div className="bg-[#0c0a15] rounded-xl p-3 border border-accent-gold/20 group/box relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-1.5 opacity-20 group-hover/box:opacity-40 transition-opacity">
+                            <Users className="w-4 h-4 text-accent-gold" />
+                        </div>
+                        <p className="text-[9px] text-accent-gold uppercase tracking-wider font-bold mb-0.5">Cartel Avg</p>
+                        <div className="text-lg font-bold text-accent-gold">${listing.avg_price ? Number(listing.avg_price).toFixed(2) : '-'}</div>
                     </div>
                 </div>
 
@@ -194,15 +216,15 @@ export default function Card({ listing, solPriceUSD, priority }) {
                 <div className="space-y-3">
                     {/* Links Row */}
                     <div className="flex justify-between items-center px-1">
-                        <div className="flex gap-4">
-                            <a href={listing.alt_asset_id ? `https://app.alt.xyz/research/${listing.alt_asset_id}` : '#'} target="_blank" className="opacity-50 hover:opacity-100 transition-opacity" title="ALT.xyz">
-                                <Image src="https://cdn.prod.website-files.com/62829b28e6300b34ff739f02/629661dd02bdba04fb424173_ALT-white-logo.png" width={16} height={16} alt="ALT" />
+                        <div className="flex gap-2">
+                            <a href={listing.alt_asset_id ? `https://app.alt.xyz/research/${listing.alt_asset_id}` : '#'} target="_blank" className="opacity-70 hover:opacity-100 hover:scale-110 transition-all border border-accent-gold rounded-full p-1 bg-black/40 backdrop-blur-sm" title="ALT.xyz">
+                                <Image src="https://cdn.prod.website-files.com/62829b28e6300b34ff739f02/629661dd02bdba04fb424173_ALT-white-logo.png" width={12} height={12} alt="ALT" />
                             </a>
-                            <a href={`https://collectorcrypt.com/assets/solana/${listing.token_mint}`} target="_blank" className="opacity-50 hover:opacity-100 transition-opacity" title="Collector Crypt">
-                                <Image src="https://www.marketbeat.com/logos/cryptocurrencies/collector-crypt-CARDS.png?v=2025-09-12" width={16} height={16} className="rounded-full bg-white p-[1px]" alt="CC" />
+                            <a href={`https://collectorcrypt.com/assets/solana/${listing.token_mint}`} target="_blank" className="opacity-70 hover:opacity-100 hover:scale-110 transition-all border border-accent-gold rounded-full p-1 bg-black/40 backdrop-blur-sm" title="Collector Crypt">
+                                <Image src="https://www.marketbeat.com/logos/cryptocurrencies/collector-crypt-CARDS.png?v=2025-09-12" width={12} height={12} className="rounded-full bg-white p-[1px]" alt="CC" />
                             </a>
-                            <a href={`https://magiceden.io/item-details/${listing.token_mint}`} target="_blank" className="opacity-50 hover:opacity-100 transition-opacity" title="Magic Eden">
-                                <Image src="https://cdn.prod.website-files.com/614c99cf4f23700c8aa3752a/637db1043720a3ea88e4ea96_public.png" width={16} height={16} alt="ME" />
+                            <a href={`https://magiceden.io/item-details/${listing.token_mint}`} target="_blank" className="opacity-70 hover:opacity-100 hover:scale-110 transition-all border border-accent-gold rounded-full p-1 bg-black/40 backdrop-blur-sm" title="Magic Eden">
+                                <Image src="https://cdn.prod.website-files.com/614c99cf4f23700c8aa3752a/637db1043720a3ea88e4ea96_public.png" width={12} height={12} alt="ME" />
                             </a>
                         </div>
                         <button onClick={(e) => copyToClipboard(e, listing.token_mint)} className="text-[10px] text-gray-500 hover:text-white flex items-center gap-1 transition-colors uppercase tracking-wider font-medium">
@@ -210,20 +232,29 @@ export default function Card({ listing, solPriceUSD, priority }) {
                         </button>
                     </div>
 
-                    {/* Snipe Button (White) */}
+                    {/* Snipe Button (Gold) */}
                     <button
                         onClick={handleSnipe}
-                        disabled={!listing.listed || snipeState === 'loading' || snipeState === 'success'}
+                        disabled={!listing.is_listed || snipeState === 'loading' || snipeState === 'success'}
                         className={`
-                            w-full relative overflow-hidden rounded-lg font-black text-sm py-3 transition-all duration-300
-                            flex items-center justify-center gap-2 uppercase tracking-wide
+                            w-full relative overflow-hidden rounded-lg text-sm py-3 transition-all duration-300
+                            flex items-center justify-center gap-2 tracking-wide
                             ${snipeState === 'idle'
-                                ? 'bg-white text-black hover:bg-gray-100 hover:scale-[1.02] shadow-lg shadow-white/10'
+                                ? 'bg-yellow-500/10 border border-yellow-500 hover:bg-yellow-500/20 hover:scale-[1.02] hover:shadow-[0_0_20px_-5px_rgba(234,179,8,0.4)] shadow-[0_0_10px_-5px_rgba(234,179,8,0.2)]'
                                 : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'}
                         `}
                     >
                         {getButtonContent()}
-                        <span>{snipeState === 'idle' ? 'SNIPE NOW' : snipeState === 'loading' ? 'PROCESSING...' : snipeState === 'success' ? 'SNIPED!' : 'FAILED'}</span>
+                        <div className="relative pokemon-title">
+                            <span className={`pokemon-title-solid font-pokemon relative z-10 ${snipeState === 'idle' ? 'text-yellow-500' : 'text-gray-500'}`}>
+                                {snipeState === 'idle' ? 'SNIPE NOW' : snipeState === 'loading' ? 'PROCESSING...' : snipeState === 'success' ? 'SNIPED!' : 'FAILED'}
+                            </span>
+                            {snipeState === 'idle' && (
+                                <span className="pokemon-title-outline font-pokemon-hollow absolute inset-0 z-20 pointer-events-none text-blue-500">
+                                    SNIPE NOW
+                                </span>
+                            )}
+                        </div>
                     </button>
                 </div>
             </div>

@@ -3,10 +3,22 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { Wallet } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 export default function WalletButton() {
-  const { publicKey, disconnect } = useWallet();
+  const { publicKey, disconnect, connected } = useWallet();
   const { setVisible } = useWalletModal();
+  const prevConnected = useRef(connected);
+
+  useEffect(() => {
+    if (connected && !prevConnected.current) {
+      toast.success('Wallet connected');
+    } else if (!connected && prevConnected.current) {
+      toast.info('Wallet disconnected');
+    }
+    prevConnected.current = connected;
+  }, [connected]);
 
   if (publicKey) {
     return (

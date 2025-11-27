@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ListingGrid from './components/ListingGrid'
 import { getSolPriceUsd } from './live/priceService'
-import { Search, Filter, ArrowUpDown } from 'lucide-react'
-import AdvancedFilters from '../components/AdvancedFilters'
+import { Search, ArrowUpDown, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function Home() {
@@ -16,11 +15,6 @@ export default function Home() {
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('listed-time')
   const [solPriceUSD, setSolPriceUSD] = useState(null)
-  const [advancedFilters, setAdvancedFilters] = useState({
-    priceRange: { min: '', max: '' },
-    grades: [],
-    categories: []
-  })
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -68,15 +62,6 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const handleClearFilters = useCallback(() => {
-    setAdvancedFilters({
-      priceRange: { min: '', max: '' },
-      grades: [],
-      categories: []
-    });
-    toast.success('Filters cleared');
-  }, []);
-
   const filteredAndSortedListings = useMemo(() => {
     return listings
       .map(listing => {
@@ -100,20 +85,7 @@ export default function Home() {
         };
         const categoryMatch = filter === 'all' || listing.cartel_category === categoryMap[filter];
 
-        // Advanced filters - Price range
-        const priceMatch =
-          (advancedFilters.priceRange.min === '' || listing.price_amount >= advancedFilters.priceRange.min) &&
-          (advancedFilters.priceRange.max === '' || listing.price_amount <= advancedFilters.priceRange.max);
-
-        // Advanced filters - Grades
-        const gradeMatch = advancedFilters.grades.length === 0 ||
-          advancedFilters.grades.includes(listing.grade_num);
-
-        // Advanced filters - Categories
-        const advCategoryMatch = advancedFilters.categories.length === 0 ||
-          advancedFilters.categories.includes(listing.cartel_category);
-
-        return searchMatch && categoryMatch && priceMatch && gradeMatch && advCategoryMatch && listing.cartel_category !== 'SKIP';
+        return searchMatch && categoryMatch && listing.cartel_category !== 'SKIP';
       })
       .sort((a, b) => {
         switch (sort) {
@@ -130,14 +102,27 @@ export default function Home() {
             return new Date(b.listed_at) - new Date(a.listed_at);
         }
       });
-  }, [listings, debouncedSearch, filter, sort, solPriceUSD, advancedFilters]);
+  }, [listings, debouncedSearch, filter, sort, solPriceUSD]);
+
+  const handleCartelRecheck = async () => {
+    toast.info('Refreshing Cartel Deals...');
+    try {
+      const response = await fetch('/api/get-listings');
+      if (!response.ok) throw new Error('Failed to refresh');
+      const data = await response.json();
+      setListings(data);
+      toast.success('Cartel Deals updated');
+    } catch (e) {
+      toast.error('Failed to refresh deals');
+    }
+  };
 
   return (
     <div className="w-full h-full p-6 space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+      <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
         {/* Search */}
-        <div className="relative w-full md:w-96">
+        <div className="relative w-full xl:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
@@ -149,40 +134,41 @@ export default function Home() {
         </div>
 
         {/* Filters & Sort */}
-        <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-          {/* Advanced Filters */}
-          <AdvancedFilters
-            filters={advancedFilters}
-            onFilterChange={setAdvancedFilters}
-            onClearFilters={handleClearFilters}
-          />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
 
-          {/* Filter Dropdown */}
-          <div className="relative min-w-[140px]">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <Filter className="w-4 h-4 text-gray-400" />
-            </div>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
-            >
-              <option value="all">All Deals</option>
-              <option value="autobuy">Auto Buy</option>
-              <option value="alert">Good Deals</option>
-              <option value="info">Info</option>
-            </select>
+          {/* Category Segmented Control */}
+          <div className="bg-black/40 border border-white/10 rounded-lg p-1 flex items-center w-full sm:w-auto overflow-x-auto no-scrollbar">
+            {[
+              { id: 'all', label: 'All', color: 'text-gray-400 hover:text-white' },
+              { id: 'autobuy', label: 'Gold', color: 'text-yellow-500' },
+              { id: 'alert', label: 'Red', color: 'text-red-500' },
+              { id: 'info', label: 'Blue', color: 'text-sky-500' }
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setFilter(cat.id)}
+                className={`
+                  flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap
+                  ${filter === cat.id
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : `${cat.color} hover:bg-white/5`
+                  }
+                `}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
           {/* Sort Dropdown */}
-          <div className="relative min-w-[160px]">
+          <div className="relative w-full sm:w-[180px] flex-shrink-0">
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
               <ArrowUpDown className="w-4 h-4 text-gray-400" />
             </div>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-accent-gold/50 cursor-pointer"
+              className="w-full appearance-none bg-black border border-yellow-500 rounded-lg pl-10 pr-8 py-2 text-sm text-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 cursor-pointer"
             >
               <option value="listed-time">Newest First</option>
               <option value="price-low">Price: Low to High</option>
@@ -190,6 +176,22 @@ export default function Home() {
               <option value="difference-percent">Best Deals</option>
               <option value="popularity">Popularity</option>
             </select>
+          </div>
+
+          {/* Cartel Recheck Button */}
+          <div className="relative group">
+            <button
+              onClick={handleCartelRecheck}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20 hover:bg-accent-gold/20 transition-colors font-medium whitespace-nowrap"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Cartel Recheck</span>
+              <div className="w-4 h-4 rounded-full border border-accent-gold/50 flex items-center justify-center text-[10px] font-bold">i</div>
+            </button>
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 border border-white/10 rounded-lg text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center">
+              Refreshes listings currently in Cartel Deals.
+            </div>
           </div>
         </div>
       </div>
