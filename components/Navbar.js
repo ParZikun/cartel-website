@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { Wallet, Menu } from 'lucide-react'
 import WalletButton from '../app/components/WalletButton'
 import { useState, useEffect } from 'react'
@@ -38,7 +39,7 @@ export default function Navbar() {
                         <Menu className="w-6 h-6" />
                     </button>
 
-                    <div className="flex items-center gap-3">
+                    <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent-gold/10 border border-accent-gold/30 flex-shrink-0">
                             <Image src="/logo.png" alt="CCP-S Logo" width={24} height={24} className="w-auto h-auto" />
                         </div>
@@ -50,7 +51,7 @@ export default function Navbar() {
                                 CCP-S
                             </h1>
                         </div>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Right: Connectivity and Wallet */}

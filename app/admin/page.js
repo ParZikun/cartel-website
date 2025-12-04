@@ -97,7 +97,14 @@ export default function AdminPage() {
                                         </div>
                                     </td>
                                     <td className="p-2 md:p-4 hidden md:table-cell">
-                                        <span className="font-mono text-white">{item.alt_value != null ? Number(item.alt_value).toFixed(2) : '-'}</span>
+                                        <div className="flex flex-col">
+                                            <span className={`font-mono font-bold ${getConfidenceColor(item.alt_value_confidence).text}`}>
+                                                ${item.alt_value != null ? Number(item.alt_value).toFixed(2) : '-'}
+                                            </span>
+                                            <span className={`text-[10px] ${getConfidenceColor(item.alt_value_confidence).text} opacity-70`}>
+                                                {item.alt_value_confidence}% Conf.
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="p-2 md:p-4">
                                         <div className="flex flex-col">

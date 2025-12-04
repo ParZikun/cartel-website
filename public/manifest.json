@@ -1,0 +1,21 @@
+{
+    "name": "Cards Cartel Sniper",
+    "short_name": "CCP-S",
+    "description": "Advanced Card Sniper Bot Dashboard",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0c0a15",
+    "theme_color": "#0c0a15",
+    "icons": [
+        {
+            "src": "/logo.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
