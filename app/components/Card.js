@@ -200,6 +200,10 @@ export default function Card({ listing, solPriceUSD, priority }) {
                         <p className={`text-[9px] opacity-60 font-mono ${confidenceColor.text} truncate`}>
                             {listing.alt_value_lower_bound ? `${Number(listing.alt_value_lower_bound).toFixed(0)} - ${Number(listing.alt_value_upper_bound).toFixed(0)}` : ''}
                         </p>
+                        {/* Confidence - Bottom Right Absolute */}
+                        <div className="absolute bottom-1 right-2">
+                            <span className={`text-[9px] ${confidenceColor.text} opacity-80 font-bold`}>{listing.alt_value_confidence}%</span>
+                        </div>
                     </div>
 
                     {/* Cartel Avg */}

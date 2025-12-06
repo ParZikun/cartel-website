@@ -19,6 +19,25 @@ const pokemonSolid = localFont({
   variable: '--font-pokemon-solid'
 });
 
+export const metadata = {
+  title: "Cards Cartel Sniper",
+  description: "Advanced Card Sniper Bot Dashboard",
+  manifest: "/manifest.json",
+  themeColor: "#0c0a15",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  appleWebApp: {
+    title: "CCP-S",
+    statusBarStyle: "black-translucent",
+    startupImage: [
+      "/logo.png",
+    ],
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${pokemonHollow.variable} ${pokemonSolid.variable}`}>
