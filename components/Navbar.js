@@ -45,10 +45,10 @@ export default function Navbar() {
                         </div>
                         <div className="pokemon-title hidden sm:block">
                             <h1 className="pokemon-title-solid font-pokemon text-xl text-accent-gold whitespace-nowrap">
-                                CCP-S
+                                CCPS
                             </h1>
                             <h1 className="pokemon-title-outline font-pokemon-hollow text-xl whitespace-nowrap">
-                                CCP-S
+                                CCPS
                             </h1>
                         </div>
                     </Link>

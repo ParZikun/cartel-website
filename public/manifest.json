@@ -1,6 +1,6 @@
 {
-    "name": "Cards Cartel Sniper",
-    "short_name": "CCP-S",
+    "name": "CCPS",
+    "short_name": "CCPS",
     "description": "Advanced Card Sniper Bot Dashboard",
     "start_url": "/",
     "display": "standalone",

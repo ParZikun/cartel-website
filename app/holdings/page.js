@@ -20,11 +20,13 @@ export default function HoldingsPage() {
     });
 
     const fetchHoldings = async (offset = 0, page = 1) => {
+        if (!publicKey) return;
+
         setLoading(true);
         setError(null);
 
         try {
-            const walletAddress = "2yDeCKeFbjiwHhCvRohd2groXGaLVZNkrZLTTkiuTp2d"; // publicKey.toBase58()
+            const walletAddress = publicKey.toBase58();
             const response = await fetch(`/api/get-wallet-holdings?wallet=${walletAddress}&offset=${offset}&limit=${pagination.limit}`);
 
             if (response.status === 404) {
@@ -97,8 +99,12 @@ export default function HoldingsPage() {
     };
 
     useEffect(() => {
-        fetchHoldings(0, 1);
-    }, []);
+        if (connected && publicKey) {
+            fetchHoldings(0, 1);
+        } else {
+            setHoldings([]);
+        }
+    }, [connected, publicKey]);
 
     const handlePageChange = (newPage) => {
         const newOffset = (newPage - 1) * pagination.limit;

@@ -20,7 +20,7 @@ const pokemonSolid = localFont({
 });
 
 export const metadata = {
-  title: "Cards Cartel Sniper",
+  title: "CCPS",
   description: "Advanced Card Sniper Bot Dashboard",
   manifest: "/manifest.json",
   themeColor: "#0c0a15",
@@ -30,7 +30,7 @@ export const metadata = {
     maximumScale: 1,
   },
   appleWebApp: {
-    title: "CCP-S",
+    title: "CCPS",
     statusBarStyle: "black-translucent",
     startupImage: [
       "/logo.png",
