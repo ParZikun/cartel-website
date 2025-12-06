@@ -104,16 +104,35 @@ export default function Home() {
       });
   }, [listings, debouncedSearch, filter, sort, solPriceUSD]);
 
-  const handleCartelRecheck = async () => {
-    toast.info('Refreshing Cartel Deals...');
+
+  const [isRechecking, setIsRechecking] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleRecheck = async (duration) => {
+    setIsRechecking(true);
+    toast.info(`Starting recheck for last ${duration}...`);
     try {
-      const response = await fetch('/api/get-listings');
-      if (!response.ok) throw new Error('Failed to refresh');
-      const data = await response.json();
-      setListings(data);
-      toast.success('Cartel Deals updated');
-    } catch (e) {
-      toast.error('Failed to refresh deals');
+      // Call Azure Function (assuming local dev port 7071)
+      const res = await fetch('http://localhost:7071/api/recheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration, category: 'SKIP' })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(data.message); // Server now returns "Recheck ... complete. Found X new deals."
+      } else {
+        const err = await res.text();
+        throw new Error(err);
+      }
+    } catch (error) {
+      console.error("Recheck Error:", error);
+      toast.error('Failed to start recheck', {
+        description: error.message
+      });
+    } finally {
+      setIsRechecking(false);
     }
   };
 
@@ -178,20 +197,46 @@ export default function Home() {
             </select>
           </div>
 
-          {/* Cartel Recheck Button */}
-          <div className="relative group">
+          {/* Cartel Recheck Dropdown */}
+          <div className="relative z-50">
             <button
-              onClick={handleCartelRecheck}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20 hover:bg-accent-gold/20 transition-colors font-medium whitespace-nowrap"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              disabled={isRechecking}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20 hover:bg-accent-gold/20 transition-colors font-medium whitespace-nowrap disabled:opacity-50"
             >
-              <RefreshCw className="w-4 h-4" />
+              {isRechecking ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               <span>Cartel Recheck</span>
               <div className="w-4 h-4 rounded-full border border-accent-gold/50 flex items-center justify-center text-[10px] font-bold">i</div>
             </button>
-            {/* Tooltip */}
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 border border-white/10 rounded-lg text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center">
-              Refreshes listings currently in Cartel Deals.
-            </div>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+                <div className="absolute right-0 mt-2 w-48 bg-[#0c0a15] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+                  {[
+                    { label: 'Last 1 Hour', value: '1H' },
+                    { label: 'Last 2 Hours', value: '2H' },
+                    { label: 'Last 6 Hours', value: '6H' },
+                    { label: 'Last 12 Hours', value: '12H' },
+                    { label: 'Last 24 Hours', value: '24H' },
+                    { label: 'Last 7 Days', value: '1W' },
+                    { label: 'All Skipped', value: 'ALL' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        handleRecheck(opt.value);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-between"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

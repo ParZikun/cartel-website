@@ -44,17 +44,22 @@ export default function AdminPage() {
     const copyToClipboard = (e, text) => {
         e.stopPropagation();
         navigator.clipboard.writeText(text);
-        toast.success('Copied to clipboard!', {
-            description: `Mint: ${text.substring(0, 8)}...`
-        });
     };
 
     return (
         <div className="w-full h-full p-6 space-y-6 relative">
             {/* Top Action Bar */}
-            {/* Top Action Bar - REMOVED as per user request */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm hidden">
-                {/* Content removed */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+                <div>
+                    <h1 className="text-2xl font-bold text-white">Deal Management</h1>
+                    <p className="text-gray-400 text-sm">Monitor and manage active listings.</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button onClick={() => fetchData(pagination.page)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-gray-400 hover:text-white" title="Refresh List">
+                        <RefreshCw className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             {/* Data Table */}
@@ -324,12 +329,14 @@ export default function AdminPage() {
             </div>
 
             {/* Backdrop for Inspection Panel */}
-            {selectedItem && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
-                    onClick={() => setSelectedItem(null)}
-                />
-            )}
-        </div>
+            {
+                selectedItem && (
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
+                        onClick={() => setSelectedItem(null)}
+                    />
+                )
+            }
+        </div >
     );
 }

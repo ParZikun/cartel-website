@@ -28,12 +28,28 @@ export default function SettingsPage() {
         }, 1000);
     };
 
-    const handleFullSync = () => {
+
+    const handleFullSync = async () => {
         toast.info('Starting full database sync...');
-        // Simulate sync process
-        setTimeout(() => {
-            toast.success('Full database sync completed');
-        }, 3000);
+        try {
+            // Call Azure Function (assuming local dev port 7071)
+            // In production, use NEXT_PUBLIC_API_URL env var
+            const res = await fetch('http://localhost:7071/api/full-recheck', {
+                method: 'POST'
+            });
+
+            if (res.ok) {
+                toast.success('Full database sync started successfully!');
+            } else {
+                const err = await res.text();
+                throw new Error(err);
+            }
+        } catch (error) {
+            console.error("Sync Error:", error);
+            toast.error('Failed to start sync', {
+                description: error.message
+            });
+        }
     };
 
     const handleTestNotification = () => {
