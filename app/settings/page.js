@@ -39,7 +39,8 @@ export default function SettingsPage() {
             });
 
             if (res.ok) {
-                toast.success('Full database sync started successfully!');
+                const data = await res.json();
+                toast.success(data.message || 'Full database sync completed successfully!');
             } else {
                 const err = await res.text();
                 throw new Error(err);
