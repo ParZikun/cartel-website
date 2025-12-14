@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Bell, Zap, Percent, Shield, CheckCircle, Database, AlertTriangle, Key, Server, Gauge } from 'lucide-react';
+import { Save, Bell, Zap, Percent, Shield, CheckCircle, Database, AlertTriangle, Key, Server, Gauge, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
-
-// In a real app, this would come from a wallet provider (Phantom, etc.)
-// For this bot, we treat it as a single-user system associated with this "admin" wallet identifier.
-const ADMIN_WALLET = "ADMIN_USER_WALLET_V1";
+import { useAuth } from '../../context/AuthContext';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function SettingsPage() {
+    const { user, token, isAuthenticated, authFetch } = useAuth();
+    const { publicKey } = useWallet();
+
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -29,8 +30,17 @@ export default function SettingsPage() {
 
     useEffect(() => {
         const fetchSettings = async () => {
+            if (!isAuthenticated || !user) {
+                setLoading(false);
+                return;
+            }
+
+            // Fallback wallet address from user object or publicKey
+            const walletAddr = user.wallet_address || publicKey?.toBase58();
+
             try {
-                const res = await fetch(`http://localhost:8000/api/settings/${ADMIN_WALLET}`);
+                // Use authFetch to include the Bearer token
+                const res = await authFetch(`http://localhost:8000/api/settings/${walletAddr}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && !data.error) {
@@ -44,8 +54,13 @@ export default function SettingsPage() {
                 setLoading(false);
             }
         };
-        fetchSettings();
-    }, []);
+
+        if (isAuthenticated) {
+            fetchSettings();
+        } else {
+            setLoading(false);
+        }
+    }, [isAuthenticated, user, publicKey]);
 
     const handleChange = (key, value) => {
         setSettings(prev => ({ ...prev, [key]: value }));
@@ -53,8 +68,10 @@ export default function SettingsPage() {
 
     const handleSave = async () => {
         setIsSaving(true);
+        const walletAddr = user?.wallet_address || publicKey?.toBase58();
+
         try {
-            const res = await fetch(`http://localhost:8000/api/settings/${ADMIN_WALLET}`, {
+            const res = await authFetch(`http://localhost:8000/api/settings/${walletAddr}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
@@ -76,7 +93,13 @@ export default function SettingsPage() {
     const handleFullSync = async () => {
         toast.info('Starting full database sync...');
         try {
-            const res = await fetch('http://localhost:7071/api/full-recheck', { method: 'POST' });
+            // Note: This endpoint might presumably still be open or require auth? 
+            // It's on a different port originally (7071) for Azure, but plan said move to API (8000).
+            // Current code calls 7071. If moved to 8000, update here.
+            // Based on previous files, syncer is in API now.
+            // Let's assume it's on 8000 now based on main.py view earlier?
+            // Wait, main.py has `/api/trigger/full-recheck`.
+            const res = await authFetch('http://localhost:8000/api/trigger/full-recheck', { method: 'POST' });
             if (res.ok) {
                 const data = await res.json();
                 toast.success(data.message || 'Full database sync completed successfully!');
@@ -92,6 +115,22 @@ export default function SettingsPage() {
 
     if (loading) {
         return <div className="p-20 text-center text-gray-500">Loading settings...</div>;
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-6">
+                <div className="p-6 bg-accent-gold/10 rounded-full border border-accent-gold/30">
+                    <Wallet className="w-16 h-16 text-accent-gold" />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Authentication Required</h2>
+                    <p className="text-gray-400 max-w-md mx-auto">
+                        Please connect your wallet and sign code to access your personal trading settings.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (
