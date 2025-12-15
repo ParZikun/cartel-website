@@ -112,8 +112,8 @@ export default function Home() {
     setIsRechecking(true);
     toast.info(`Starting recheck for last ${duration}...`);
     try {
-      // Call Azure Function (assuming local dev port 7071)
-      const res = await fetch('http://localhost:7071/api/recheck', {
+      // Call Python Backend Endpoint
+      const res = await fetch('/api/trigger/recheck', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ duration, category: 'SKIP' })

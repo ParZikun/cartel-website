@@ -41,6 +41,8 @@ export const metadata = {
 };
 
 
+import NotificationListener from './components/NotificationListener';
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${pokemonHollow.variable} ${pokemonSolid.variable}`}>
@@ -51,6 +53,7 @@ export default function RootLayout({ children }) {
             <TransactionProvider>
               <UIProvider>
                 <AccessControl>
+                  <NotificationListener />
                   <div className="min-h-screen">
                     <Navbar />
                     <div className="flex pt-20">

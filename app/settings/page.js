@@ -13,9 +13,9 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Core Settings
     const [settings, setSettings] = useState({
         auto_buy_enabled: false,
+        min_price: 0.0,
         max_price: 5.0,
         priority_fee: 0.005,
         slippage: 1.0,
@@ -25,7 +25,8 @@ export default function SettingsPage() {
         gold_discount_percent: 30,
         red_discount_percent: 20,
         blue_discount_percent: 10,
-        push_enabled: true
+        push_enabled: true,
+        blacklisted_keywords: ''
     });
 
     useEffect(() => {
@@ -191,10 +192,26 @@ export default function SettingsPage() {
                         </button>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Min Price */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Min Price (SOL)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={settings.min_price}
+                                    onChange={(e) => handleChange('min_price', parseFloat(e.target.value))}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
+                                    step="0.01"
+                                    min="0"
+                                />
+                                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
+                            </div>
+                        </div>
+
                         {/* Max Price */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-300">Global Max Price (SOL)</label>
+                            <label className="text-sm font-medium text-gray-300">Max Price (SOL)</label>
                             <div className="relative">
                                 <input
                                     type="number"
@@ -205,6 +222,7 @@ export default function SettingsPage() {
                                 />
                                 <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
                             </div>
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.max_price * 150).toFixed(2)} USD</div>
                         </div>
 
                         {/* Slippage */}
@@ -254,6 +272,7 @@ export default function SettingsPage() {
                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors font-mono"
                                 step="0.00001"
                             />
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.jito_tip_amount * 150).toFixed(6)} USD</div>
                             <div className="text-xs text-gray-500 font-mono">For faster transaction inclusion</div>
                         </div>
                     </div>
@@ -299,6 +318,24 @@ export default function SettingsPage() {
                         />
                         <p className="text-xs text-yellow-500/60 mt-1">
                             Warning: Stored in database. In production, use environment variables or a vault.
+                        </p>
+                    </div>
+
+                    {/* Blacklist Keywords */}
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-red-400">
+                            <Shield className="w-4 h-4" />
+                            <label className="text-sm font-medium">Blacklisted Keywords (Comma Separated)</label>
+                        </div>
+                        <input
+                            type="text"
+                            value={settings.blacklisted_keywords || ''}
+                            onChange={(e) => handleChange('blacklisted_keywords', e.target.value)}
+                            placeholder="black star, sticker, damage"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors font-mono text-sm"
+                        />
+                        <p className="text-xs text-gray-500 font-mono">
+                            Cards containing these words in their name will be ignored.
                         </p>
                     </div>
                 </div>

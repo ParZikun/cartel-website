@@ -3,7 +3,7 @@ import { WalletCards, TrendingDown, Tag, BarChart4, Copy, CheckCircle, XCircle, 
 import { useState } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useTransaction } from '../context/TransactionContext';
 import { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getConfidenceColor, getDifferenceColor } from '../utils/format';
