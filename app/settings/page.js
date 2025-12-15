@@ -41,7 +41,8 @@ export default function SettingsPage() {
 
             try {
                 // Use authFetch to include the Bearer token
-                const res = await authFetch(`http://localhost:8000/api/settings/${walletAddr}`);
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const res = await authFetch(`${API_URL}/api/settings/${walletAddr}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && !data.error) {
@@ -72,7 +73,8 @@ export default function SettingsPage() {
         const walletAddr = user?.wallet_address || publicKey?.toBase58();
 
         try {
-            const res = await authFetch(`http://localhost:8000/api/settings/${walletAddr}`, {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await authFetch(`${API_URL}/api/settings/${walletAddr}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
@@ -95,7 +97,8 @@ export default function SettingsPage() {
         toast.info('Starting full database sync...');
         try {
             // Call Python Backend Endpoint
-            const res = await authFetch('/api/trigger/full-recheck', { method: 'POST' });
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await authFetch(`${API_URL}/api/trigger/full-recheck`, { method: 'POST' });
             if (res.ok) {
                 const data = await res.json();
                 toast.success(data.message || 'Full database sync completed successfully!');

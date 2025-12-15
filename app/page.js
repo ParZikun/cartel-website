@@ -34,7 +34,8 @@ export default function Home() {
       setError(null);
 
       try {
-        const response = await fetch('/api/get-listings');
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${API_URL}/api/get-listings`);
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`API Error: ${response.status} - ${errorText}`);
@@ -113,7 +114,8 @@ export default function Home() {
     toast.info(`Starting recheck for last ${duration}...`);
     try {
       // Call Python Backend Endpoint
-      const res = await fetch('/api/trigger/recheck', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/api/trigger/recheck`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ duration, category: 'SKIP' })
