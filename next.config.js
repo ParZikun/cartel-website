@@ -1,5 +1,13 @@
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  disable: false, // Enable in dev for testing
+  register: true,
+  skipWaiting: true,
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ... (existing config)
   images: {
     remotePatterns: [
       {
@@ -43,6 +51,9 @@ const nextConfig = {
         hostname: '*.ipfs.nftstorage.link',
       },
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   env: {
     API_URL: process.env.API_URL,
@@ -50,4 +61,5 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withPWA(nextConfig)
+
