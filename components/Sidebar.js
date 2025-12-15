@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Home, Briefcase, Shield, Settings, X, Eye } from 'lucide-react'
 import { useUI } from '../context/UIContext'
@@ -32,7 +33,22 @@ export default function Sidebar() {
                 fixed inset-y-0 left-0 z-[60] w-64 glass border-r border-accent-gold/20 transform transition-transform duration-300 ease-in-out flex flex-col
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
-                <div className="flex-1 flex flex-col pt-24 pb-4 overflow-y-auto">
+                <div className="flex-1 flex flex-col pt-8 pb-4 overflow-y-auto">
+                    {/* Sidebar Logo */}
+                    <div className="flex items-center gap-3 px-6 mb-6">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent-gold/10 border border-accent-gold/30 flex-shrink-0">
+                            <Image src="/logo.png" alt="CCPS Logo" width={24} height={24} className="w-auto h-auto" />
+                        </div>
+                        <div className="pokemon-title">
+                            <h1 className="pokemon-title-solid font-pokemon text-xl text-accent-gold whitespace-nowrap">
+                                CCPS
+                            </h1>
+                            <h1 className="pokemon-title-outline font-pokemon-hollow text-xl whitespace-nowrap absolute top-0 left-0" style={{ position: 'relative', marginTop: '-1.75rem' }}>
+                                CCPS
+                            </h1>
+                        </div>
+                    </div>
+
                     {/* Mobile Close Button */}
                     <div className="absolute top-4 right-4">
                         <button onClick={closeSidebar} className="p-2 text-gray-400 hover:text-white">

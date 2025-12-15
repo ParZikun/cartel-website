@@ -3,6 +3,7 @@ import { WalletCards, TrendingDown, Tag, BarChart4, Copy, CheckCircle, XCircle, 
 import { useState } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useAuth } from '../../context/AuthContext';
 import { useTransaction } from '../context/TransactionContext';
 import { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { getConfidenceColor, getDifferenceColor } from '../utils/format';
@@ -49,6 +50,7 @@ const timeAgo = (dateString) => {
 export default function Card({ listing, solPriceUSD, priority }) {
     const { connection } = useConnection();
     const { publicKey, signTransaction } = useWallet();
+    const { token } = useAuth();
     const { priorityFee } = useTransaction();
 
     const [snipeState, setSnipeState] = useState('idle');
@@ -77,9 +79,13 @@ export default function Card({ listing, solPriceUSD, priority }) {
         toast.info('Initiating snipe transaction...');
 
         try {
-            const response = await fetch('/api/magiceden/buy', {
+            // Updated to use Python Backend Endpoint
+            const response = await fetch('/api/buy/create-tx', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     buyer: publicKey.toBase58(),
                     tokenMint: listing.token_mint,
@@ -200,6 +206,10 @@ export default function Card({ listing, solPriceUSD, priority }) {
                         <p className={`text-[9px] opacity-60 font-mono ${confidenceColor.text} truncate`}>
                             {listing.alt_value_lower_bound ? `${Number(listing.alt_value_lower_bound).toFixed(0)} - ${Number(listing.alt_value_upper_bound).toFixed(0)}` : ''}
                         </p>
+                        {/* Confidence - Bottom Right Absolute */}
+                        <div className="absolute bottom-1 right-2">
+                            <span className={`text-[9px] ${confidenceColor.text} opacity-80 font-bold`}>{listing.alt_value_confidence}%</span>
+                        </div>
                     </div>
 
                     {/* Cartel Avg */}

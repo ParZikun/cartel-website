@@ -24,7 +24,7 @@ export default function HoldingsPage() {
         setError(null);
 
         try {
-            const walletAddress = "2yDeCKeFbjiwHhCvRohd2groXGaLVZNkrZLTTkiuTp2d"; // publicKey.toBase58()
+            const walletAddress = publicKey.toBase58();
             const response = await fetch(`/api/get-wallet-holdings?wallet=${walletAddress}&offset=${offset}&limit=${pagination.limit}`);
 
             if (response.status === 404) {
@@ -43,17 +43,39 @@ export default function HoldingsPage() {
 
             // Map API response
             const formattedHoldings = rawHoldings.map(item => ({
+                // Images
                 img_url: item.img || item.img_url || item.image,
+
+                // Pricing & Alt Data
                 alt_value: parseFloat(item.alt_value) || null,
                 avg_price: parseFloat(item.cartel_avg) || parseFloat(item.avg_price) || null,
-                alt_value_lower_bound: item.alt_range ? parseFloat(item.alt_range.split(' - ')[0]) : null,
-                alt_value_upper_bound: item.alt_range ? parseFloat(item.alt_range.split(' - ')[1]) : null,
+                price_amount: parseFloat(item.price_amount) || null,
+                price_currency: item.price_currency || 'SOL',
+                diff: parseFloat(item.diff) || 0,
+
+                // Alt Details
+                alt_asset_id: item.alt_asset_id,
+                alt_value_lower_bound: item.alt_range ? parseFloat(item.alt_range.split(' - ')[0]) : (parseFloat(item.alt_value_lower_bound) || null),
+                alt_value_upper_bound: item.alt_range ? parseFloat(item.alt_range.split(' - ')[1]) : (parseFloat(item.alt_value_upper_bound) || null),
+                alt_value_confidence: parseFloat(item.alt_value_confidence) || null,
+
+                // Listing Metadata
                 name: item.name,
+                category: item.category,
+                cartel_category: item.cartel_category,
+                is_listed: item.is_listed,
+                last_analyzed_at: item.last_analyzed_at,
+
+                // Grading
                 grade: item.grade,
                 grade_num: parseInt(item.grade_num) || null,
-                supply: parseInt(item.supply) || null,
+                grading_company: item.grading_company,
                 grading_id: item.grading_id || item.cert_id || item.certification_number,
+
+                // Supply & IDs
+                supply: parseInt(item.supply) || null,
                 token_mint: item.mint || item.token_mint,
+                insured_value: parseFloat(item.insured_value) || null,
             }));
 
             setHoldings(formattedHoldings);
@@ -130,10 +152,22 @@ export default function HoldingsPage() {
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                        {holdings.map((card, index) => (
-                            <HoldingsCard key={card.token_mint || index} card={card} />
-                        ))}
+                    <div className="relative min-h-[500px]">
+                        {/* Pagination Loading Buffer Overlay */}
+                        {loading && holdings.length > 0 && (
+                            <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl">
+                                <div className="flex flex-col items-center gap-3 p-6 bg-[#0c0a15] border border-white/10 rounded-2xl shadow-2xl">
+                                    <Loader className="w-8 h-8 text-accent-gold animate-spin" />
+                                    <span className="text-sm font-medium text-white tracking-wide">Loading cards...</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                            {holdings.map((card, index) => (
+                                <HoldingsCard key={card.token_mint || index} card={card} />
+                            ))}
+                        </div>
                     </div>
 
                     {/* Pagination Controls (Bottom) */}

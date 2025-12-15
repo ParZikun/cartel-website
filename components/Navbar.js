@@ -1,13 +1,18 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { Wallet, Menu } from 'lucide-react'
 import WalletButton from '../app/components/WalletButton'
 import { useState, useEffect } from 'react'
 import { useUI } from '../context/UIContext'
+import { useAuth } from '../context/AuthContext'
+import { useWallet } from '@solana/wallet-adapter-react'
 
 export default function Navbar() {
     const { toggleSidebar } = useUI();
+    const { login, logout, isAuthenticated, isLoading } = useAuth();
+    const { publicKey } = useWallet();
     const [healthStatus, setHealthStatus] = useState('unknown'); // unknown, healthy, error
 
     useEffect(() => {
@@ -38,19 +43,19 @@ export default function Navbar() {
                         <Menu className="w-6 h-6" />
                     </button>
 
-                    <div className="flex items-center gap-3">
+                    <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent-gold/10 border border-accent-gold/30 flex-shrink-0">
                             <Image src="/logo.png" alt="CCP-S Logo" width={24} height={24} className="w-auto h-auto" />
                         </div>
                         <div className="pokemon-title hidden sm:block">
                             <h1 className="pokemon-title-solid font-pokemon text-xl text-accent-gold whitespace-nowrap">
-                                CCP-S
+                                CCPS
                             </h1>
                             <h1 className="pokemon-title-outline font-pokemon-hollow text-xl whitespace-nowrap">
-                                CCP-S
+                                CCPS
                             </h1>
                         </div>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Right: Connectivity and Wallet */}
@@ -76,7 +81,26 @@ export default function Navbar() {
                     </div>
 
                     {/* Wallet Button */}
-                    <WalletButton />
+                    <div className="flex items-center gap-2">
+                        {publicKey && !isAuthenticated && (
+                            <button
+                                onClick={login}
+                                disabled={isLoading}
+                                className="px-4 py-2 text-sm font-bold text-black bg-accent-gold rounded-lg hover:bg-yellow-400 disabled:opacity-50 transition-colors"
+                            >
+                                {isLoading ? 'Signing...' : 'SIGN IN'}
+                            </button>
+                        )}
+                        {isAuthenticated && (
+                            <button
+                                onClick={logout}
+                                className="px-4 py-2 text-xs font-mono text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg hover:bg-red-400/20 transition-colors"
+                            >
+                                LOGOUT
+                            </button>
+                        )}
+                        <WalletButton />
+                    </div>
                 </div>
             </div>
         </header>

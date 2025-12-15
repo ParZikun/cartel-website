@@ -1,47 +1,136 @@
 'use client';
 
-import { useState } from 'react';
-import { Save, Bell, Zap, Percent, Shield, CheckCircle, Database, AlertTriangle } from 'lucide-react';
-
+import { useState, useEffect } from 'react';
+import { Save, Bell, Zap, Percent, Shield, CheckCircle, Database, AlertTriangle, Key, Server, Gauge, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function SettingsPage() {
-    // State
-    const [autoBuyEnabled, setAutoBuyEnabled] = useState(false);
-    const [maxPrice, setMaxPrice] = useState(5.0);
-    const [priorityFee, setPriorityFee] = useState(0.0001); // Default 0.0001 SOL
-    const [slippage, setSlippage] = useState(1.0); // Default 1%
-    const [thresholds, setThresholds] = useState({
-        gold: 30,
-        red: 20,
-        blue: 10
-    });
-    const [pushEnabled, setPushEnabled] = useState(true);
+    const { user, token, isAuthenticated, authFetch } = useAuth();
+    const { publicKey } = useWallet();
+
+    const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleSave = () => {
+    const [settings, setSettings] = useState({
+        auto_buy_enabled: false,
+        min_price: 0.0,
+        max_price: 5.0,
+        priority_fee: 0.005,
+        slippage: 1.0,
+        rpc_endpoint: 'https://api.mainnet-beta.solana.com',
+        jito_tip_amount: 0.001,
+        encrypted_private_key: '',
+        gold_discount_percent: 30,
+        red_discount_percent: 20,
+        blue_discount_percent: 10,
+        push_enabled: true,
+        blacklisted_keywords: ''
+    });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            if (!isAuthenticated || !user) {
+                setLoading(false);
+                return;
+            }
+
+            // Fallback wallet address from user object or publicKey
+            const walletAddr = user.wallet_address || publicKey?.toBase58();
+
+            try {
+                // Use authFetch to include the Bearer token
+                const res = await authFetch(`http://localhost:8000/api/settings/${walletAddr}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && !data.error) {
+                        setSettings(prev => ({ ...prev, ...data }));
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch settings:", error);
+                toast.error("Failed to load settings from server.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (isAuthenticated) {
+            fetchSettings();
+        } else {
+            setLoading(false);
+        }
+    }, [isAuthenticated, user, publicKey]);
+
+    const handleChange = (key, value) => {
+        setSettings(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleSave = async () => {
         setIsSaving(true);
-        // Simulate API call
-        setTimeout(() => {
+        const walletAddr = user?.wallet_address || publicKey?.toBase58();
+
+        try {
+            const res = await authFetch(`http://localhost:8000/api/settings/${walletAddr}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+
+            if (res.ok) {
+                toast.success('Settings saved successfully');
+            } else {
+                throw new Error('Failed to save');
+            }
+        } catch (error) {
+            toast.error('Failed to save settings');
+        } finally {
             setIsSaving(false);
-            toast.success('Settings saved successfully');
-        }, 1000);
+        }
     };
 
-    const handleFullSync = () => {
+
+    const handleFullSync = async () => {
         toast.info('Starting full database sync...');
-        // Simulate sync process
-        setTimeout(() => {
-            toast.success('Full database sync completed');
-        }, 3000);
+        try {
+            // Call Python Backend Endpoint
+            const res = await authFetch('/api/trigger/full-recheck', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                toast.success(data.message || 'Full database sync completed successfully!');
+            } else {
+                const err = await res.text();
+                throw new Error(err);
+            }
+        } catch (error) {
+            console.error("Sync Error:", error);
+            toast.error('Failed to start sync', { description: error.message });
+        }
     };
 
-    const handleTestNotification = () => {
-        toast.info('This is a test notification');
-    };
+    if (loading) {
+        return <div className="p-20 text-center text-gray-500">Loading settings...</div>;
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-6">
+                <div className="p-6 bg-accent-gold/10 rounded-full border border-accent-gold/30">
+                    <Wallet className="w-16 h-16 text-accent-gold" />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Authentication Required</h2>
+                    <p className="text-gray-400 max-w-md mx-auto">
+                        Please connect your wallet and sign code to access your personal trading settings.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="w-full h-full p-6 space-y-8 max-w-5xl mx-auto">
+        <div className="w-full h-full p-6 space-y-8 max-w-5xl mx-auto pb-20">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
@@ -77,10 +166,10 @@ export default function SettingsPage() {
                     <div className="p-2 rounded-lg bg-accent-gold/10 border border-accent-gold/20">
                         <Zap className="w-5 h-5 text-accent-gold" />
                     </div>
-                    Transactions
+                    Transactions & Snipe Config
                 </h2>
 
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
                     {/* Auto-Buy Toggle */}
                     <div className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5">
                         <div>
@@ -88,69 +177,162 @@ export default function SettingsPage() {
                             <p className="text-sm text-gray-400 mt-1">Automatically purchase cards meeting criteria.</p>
                         </div>
                         <button
-                            onClick={() => setAutoBuyEnabled(!autoBuyEnabled)}
+                            onClick={() => handleChange('auto_buy_enabled', !settings.auto_buy_enabled)}
                             className={`
                                 relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent-gold/50 focus:ring-offset-2 focus:ring-offset-black
-                                ${autoBuyEnabled ? 'bg-accent-gold' : 'bg-gray-700'}
+                                ${settings.auto_buy_enabled ? 'bg-accent-gold' : 'bg-gray-700'}
                             `}
                         >
-                            <span
-                                className={`
-                                    inline-block h-5 w-5 transform rounded-full bg-white transition-transform
-                                    ${autoBuyEnabled ? 'translate-x-6' : 'translate-x-1'}
-                                `}
-                            />
+                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${settings.auto_buy_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
-                    {/* Max Price Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Global Max Price (SOL)</label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                value={maxPrice}
-                                onChange={(e) => setMaxPrice(parseFloat(e.target.value))}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
-                                step="0.1"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Min Price */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Min Price (SOL)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={settings.min_price}
+                                    onChange={(e) => handleChange('min_price', parseFloat(e.target.value))}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
+                                    step="0.01"
+                                    min="0"
+                                />
+                                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
+                            </div>
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.min_price * 150).toFixed(2)} USD</div>
+                        </div>
+
+                        {/* Max Price */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Max Price (SOL)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={settings.max_price}
+                                    onChange={(e) => handleChange('max_price', parseFloat(e.target.value))}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
+                                    step="0.1"
+                                />
+                                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
+                            </div>
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.max_price * 150).toFixed(2)} USD</div>
+                        </div>
+
+                        {/* Slippage */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Slippage Tolerance</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={settings.slippage}
+                                    onChange={(e) => handleChange('slippage', parseFloat(e.target.value))}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
+                                    step="0.1"
+                                    max="100"
+                                />
+                                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Priority Fee Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Priority Fee (SOL)</label>
-                        <div className="relative">
+                    <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                        {/* Priority Fee */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Gauge className="w-4 h-4 text-purple-400" />
+                                <label className="text-sm font-medium text-gray-300">Priority Fee (SOL)</label>
+                            </div>
                             <input
                                 type="number"
-                                value={priorityFee}
-                                onChange={(e) => setPriorityFee(parseFloat(e.target.value) || 0)}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
+                                value={settings.priority_fee}
+                                onChange={(e) => handleChange('priority_fee', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors font-mono"
                                 step="0.000001"
                             />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.priority_fee * 150).toFixed(6)} USD</div>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500 font-mono px-1">
-                            <span>≈ {(priorityFee * 1e9).toLocaleString()} lamports</span>
-                            <span>≈ ${(priorityFee * 150).toFixed(6)} USD</span> {/* Assuming $150 SOL for now */}
-                        </div>
-                    </div>
 
-                    {/* Slippage Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300">Slippage Tolerance</label>
-                        <div className="relative">
+                        {/* Jito Tip */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-purple-400" />
+                                <label className="text-sm font-medium text-gray-300">Jito Bundle Tip (SOL)</label>
+                            </div>
                             <input
                                 type="number"
-                                value={slippage}
-                                onChange={(e) => setSlippage(parseFloat(e.target.value))}
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-gold/50 transition-colors font-mono"
-                                step="0.1"
-                                max="100"
+                                value={settings.jito_tip_amount}
+                                onChange={(e) => handleChange('jito_tip_amount', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-colors font-mono"
+                                step="0.00001"
                             />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.jito_tip_amount * 150).toFixed(6)} USD</div>
+                            <div className="text-xs text-gray-500 font-mono">For faster transaction inclusion</div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Connection & Security Section */}
+            <section className="glass rounded-2xl p-8 border border-white/5 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Server className="w-24 h-24 text-sky-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                        <Server className="w-5 h-5 text-sky-400" />
+                    </div>
+                    Connection & Security
+                </h2>
+
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">RPC Endpoint URL</label>
+                        <input
+                            type="text"
+                            value={settings.rpc_endpoint}
+                            onChange={(e) => handleChange('rpc_endpoint', e.target.value)}
+                            placeholder="https://api.mainnet-beta.solana.com"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500/50 transition-colors font-mono text-sm"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-yellow-500">
+                            <Key className="w-4 h-4" />
+                            <label className="text-sm font-medium">Private Key (Example / Encrypted)</label>
+                        </div>
+
+                        <input
+                            type="password"
+                            value={settings.encrypted_private_key || ''}
+                            onChange={(e) => handleChange('encrypted_private_key', e.target.value)}
+                            placeholder="Base58 Private Key..."
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500/50 transition-colors font-mono text-sm"
+                        />
+                        <p className="text-xs text-yellow-500/60 mt-1">
+                            Warning: Stored in database. In production, use environment variables or a vault.
+                        </p>
+                    </div>
+
+                    {/* Blacklist Keywords */}
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-red-400">
+                            <Shield className="w-4 h-4" />
+                            <label className="text-sm font-medium">Blacklisted Keywords (Comma Separated)</label>
+                        </div>
+                        <input
+                            type="text"
+                            value={settings.blacklisted_keywords || ''}
+                            onChange={(e) => handleChange('blacklisted_keywords', e.target.value)}
+                            placeholder="black star, sticker, damage"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors font-mono text-sm"
+                        />
+                        <p className="text-xs text-gray-500 font-mono">
+                            Cards containing these words in their name will be ignored.
+                        </p>
                     </div>
                 </div>
             </section>
@@ -175,8 +357,8 @@ export default function SettingsPage() {
                         <div className="relative group/input">
                             <input
                                 type="number"
-                                value={thresholds.gold}
-                                onChange={(e) => setThresholds({ ...thresholds, gold: parseInt(e.target.value) })}
+                                value={settings.gold_discount_percent}
+                                onChange={(e) => handleChange('gold_discount_percent', parseInt(e.target.value))}
                                 className="w-full bg-black/40 border border-yellow-500/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500/50 transition-colors font-mono group-hover/input:border-yellow-500/30"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
@@ -189,8 +371,8 @@ export default function SettingsPage() {
                         <div className="relative group/input">
                             <input
                                 type="number"
-                                value={thresholds.red}
-                                onChange={(e) => setThresholds({ ...thresholds, red: parseInt(e.target.value) })}
+                                value={settings.red_discount_percent}
+                                onChange={(e) => handleChange('red_discount_percent', parseInt(e.target.value))}
                                 className="w-full bg-black/40 border border-red-500/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors font-mono group-hover/input:border-red-500/30"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
@@ -203,8 +385,8 @@ export default function SettingsPage() {
                         <div className="relative group/input">
                             <input
                                 type="number"
-                                value={thresholds.blue}
-                                onChange={(e) => setThresholds({ ...thresholds, blue: parseInt(e.target.value) })}
+                                value={settings.blue_discount_percent}
+                                onChange={(e) => handleChange('blue_discount_percent', parseInt(e.target.value))}
                                 className="w-full bg-black/40 border border-sky-500/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500/50 transition-colors font-mono group-hover/input:border-sky-500/30"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
@@ -213,62 +395,10 @@ export default function SettingsPage() {
                 </div>
             </section>
 
-            {/* Notifications Section */}
-            <section className="glass rounded-2xl p-8 border border-white/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <Bell className="w-24 h-24 text-purple-400" />
-                </div>
-
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                        <Bell className="w-5 h-5 text-purple-400" />
-                    </div>
-                    Notifications
-                </h2>
-
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-black/20 p-6 rounded-xl border border-white/5">
-                    <div className="flex items-start gap-4">
-                        <div className="p-2 rounded-full bg-gray-800 text-gray-400">
-                            <Shield className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="text-white font-medium text-lg">Web Push Notifications</h3>
-                            <p className="text-gray-400 text-sm mt-1 max-w-md">
-                                Receive instant alerts when a new card matching your criteria is listed or when a snipe is successful.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={handleTestNotification}
-                            className="px-4 py-2 rounded-lg bg-white/5 text-white text-sm font-medium hover:bg-white/10 transition-colors border border-white/10"
-                        >
-                            Test Notification
-                        </button>
-
-                        <button
-                            onClick={() => setPushEnabled(!pushEnabled)}
-                            className={`
-                                relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2 focus:ring-offset-black
-                                ${pushEnabled ? 'bg-purple-500' : 'bg-gray-700'}
-                            `}
-                        >
-                            <span
-                                className={`
-                                    inline-block h-5 w-5 transform rounded-full bg-white transition-transform
-                                    ${pushEnabled ? 'translate-x-6' : 'translate-x-1'}
-                                `}
-                            />
-                        </button>
-                    </div>
-                </div>
-            </section>
-
             {/* Danger Zone Section */}
             <section className="glass rounded-2xl p-8 border border-red-500/20 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <AlertTriangle className="w-24 h-24 text-red-500" />
+                    <Database className="w-24 h-24 text-red-500" />
                 </div>
 
                 <h2 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-3">
@@ -286,9 +416,9 @@ export default function SettingsPage() {
                         <div>
                             <h3 className="text-white font-medium text-lg">Full Database Sync</h3>
                             <p className="text-gray-400 text-sm mt-1 max-w-md">
-                                Pulls all data from Magic Eden and the database to recheck all SKIP listings and potential misses.
+                                Pulls all data from Magic Eden and the database to recheck all SKIP listings.
                                 <span className="block mt-2 text-red-400 font-medium">
-                                    Disclaimer: This process takes time and may delay the scanning and pinging of new deals.
+                                    Disclaimer: Optimized to skip items updated &lt;24h ago.
                                 </span>
                             </p>
                         </div>
