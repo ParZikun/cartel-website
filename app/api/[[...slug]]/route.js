@@ -1,19 +1,34 @@
 import { NextResponse } from 'next/server';
 
-export async function GET(request, { params }) {
+const getApiUrl = (slug, search) => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
+  return `${baseUrl}/api/${slug}${search}`;
+};
+
+async function handler(request, { params }) {
   const slug = params.slug ? params.slug.join('/') : '';
-  const { search } = new URL(request.url); // Use search to get the full query string with '?'
-  
-  // Fallback to localhost:5000 if API_URL is not set.
-  const apiUrl = `${process.env.API_URL || 'http://localhost:5000'}/api/${slug}${search}`;
+  const { search } = new URL(request.url);
+  const apiUrl = getApiUrl(slug, search);
 
   try {
-    const apiResponse = await fetch(apiUrl, {
+    const fetchOptions = {
+      method: request.method,
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': process.env.API_KEY,
+        // Forward Auth Header if present
+        ...(request.headers.get('authorization') && { 'Authorization': request.headers.get('authorization') }),
+        // Add API Key if set
+        ...(process.env.API_KEY && { 'X-API-Key': process.env.API_KEY }),
       },
-    });
+    };
+
+    // Attach body for non-GET/HEAD requests
+    if (!['GET', 'HEAD'].includes(request.method)) {
+      const body = await request.json();
+      fetchOptions.body = JSON.stringify(body);
+    }
+
+    const apiResponse = await fetch(apiUrl, fetchOptions);
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
@@ -25,6 +40,8 @@ export async function GET(request, { params }) {
     return NextResponse.json(data);
   } catch (error) {
     console.error(`Error forwarding request to ${apiUrl}:`, error);
-    return new NextResponse('Error forwarding request to backend API.', { status: 502 }); // 502 Bad Gateway is more appropriate
+    return new NextResponse('Error forwarding request to backend API.', { status: 502 });
   }
 }
+
+export { handler as GET, handler as POST, handler as PUT, handler as DELETE, handler as PATCH };
