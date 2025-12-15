@@ -56,9 +56,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button onClick={() => fetchData(pagination.page)} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-gray-400 hover:text-white" title="Refresh List">
-                        <RefreshCw className="w-5 h-5" />
-                    </button>
+                    {/* Actions can act here if needed, currently empty as per request */}
                 </div>
             </div>
 

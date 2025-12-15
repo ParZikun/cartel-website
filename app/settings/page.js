@@ -94,13 +94,8 @@ export default function SettingsPage() {
     const handleFullSync = async () => {
         toast.info('Starting full database sync...');
         try {
-            // Note: This endpoint might presumably still be open or require auth? 
-            // It's on a different port originally (7071) for Azure, but plan said move to API (8000).
-            // Current code calls 7071. If moved to 8000, update here.
-            // Based on previous files, syncer is in API now.
-            // Let's assume it's on 8000 now based on main.py view earlier?
-            // Wait, main.py has `/api/trigger/full-recheck`.
-            const res = await authFetch('http://localhost:8000/api/trigger/full-recheck', { method: 'POST' });
+            // Call Python Backend Endpoint
+            const res = await authFetch('/api/trigger/full-recheck', { method: 'POST' });
             if (res.ok) {
                 const data = await res.json();
                 toast.success(data.message || 'Full database sync completed successfully!');
@@ -207,6 +202,7 @@ export default function SettingsPage() {
                                 />
                                 <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">SOL</span>
                             </div>
+                            <div className="text-xs text-gray-500 font-mono">≈ ${(settings.min_price * 150).toFixed(2)} USD</div>
                         </div>
 
                         {/* Max Price */}
