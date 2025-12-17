@@ -414,74 +414,107 @@ export default function AdminPage() {
                                         <p className="text-2xl font-bold text-purple-400">{selectedItem.supply || '-'}</p>
                                     </div>
                                 </div>
+
+                                {/* Deep Dive Details (Restored) */}
+                                <div className="space-y-4 pt-6 border-t border-white/5">
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Deep Dive</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                            <p className="text-[10px] text-gray-500 uppercase">Confidence</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className={`w-2 h-2 rounded-full ${getConfidenceColor(selectedItem.alt_value_confidence).bg}`} />
+                                                <p className="text-sm font-bold text-white">{selectedItem.alt_value_confidence}%</p>
+                                            </div>
+                                        </div>
+                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                            <p className="text-[10px] text-gray-500 uppercase">Valuation Range</p>
+                                            <p className="text-sm font-bold text-white mt-1">
+                                                ${selectedItem.alt_value_min?.toLocaleString()} - ${selectedItem.alt_value_max?.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                            <p className="text-[10px] text-gray-500 uppercase">Cert Number</p>
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <p className="text-sm font-mono text-gray-300 truncate tracking-wider">{selectedItem.grading_id}</p>
+                                                <Copy className="w-3 h-3 text-gray-600 cursor-pointer hover:text-white" onClick={(e) => copyToClipboard(e, selectedItem.grading_id)} />
+                                            </div>
+                                        </div>
+                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                            <p className="text-[10px] text-gray-500 uppercase">Last Analyzed</p>
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <Clock className="w-3 h-3 text-gray-500" />
+                                                <p className="text-sm text-gray-300">{selectedItem.last_analyzed_at ? new Date(selectedItem.last_analyzed_at).toLocaleDateString() : 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                )}
+                    </div>
+
+            {/* Sales History Overlay */}
+                {showHistoryOverlay && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <div className="bg-[#12101a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                                <h3 className="font-bold text-white">Recent Sales History</h3>
+                                <button onClick={() => setShowHistoryOverlay(false)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="p-4 max-h-[60vh] overflow-y-auto">
+                                {overlayLoading ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
+                                        <RefreshCw className="w-6 h-6 animate-spin" />
+                                        <p>Fetching Transactions...</p>
+                                    </div>
+                                ) : salesHistory?.transactions?.length > 0 ? (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4 mb-4">
+                                            <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                                                <p className="text-xs text-gray-500 uppercase">New Avg</p>
+                                                <p className="text-xl font-bold text-white">${salesHistory.avg_price ? Math.round(salesHistory.avg_price).toLocaleString() : '-'}</p>
+                                            </div>
+                                            <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                                                <p className="text-xs text-gray-500 uppercase">Sales Found</p>
+                                                <p className="text-xl font-bold text-white">{salesHistory.transactions.length}</p>
+                                            </div>
+                                        </div>
+                                        <table className="w-full text-sm text-left">
+                                            <thead>
+                                                <tr className="text-gray-500 text-xs uppercase border-b border-white/5">
+                                                    <th className="pb-2">Date</th>
+                                                    <th className="pb-2 text-right">Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {salesHistory.transactions.slice(0, 15).map((tx, i) => (
+                                                    <tr key={i} className="text-gray-300">
+                                                        <td className="py-2">{new Date(tx.date).toLocaleDateString()}</td>
+                                                        <td className="py-2 text-right font-mono">${Math.round(tx.price).toLocaleString()}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <p>No sales history found for this item.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 )}
+
+                {/* Backdrop for Inspection Panel */}
+                {selectedItem && (
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
+                        onClick={() => setSelectedItem(null)}
+                    />
+                )}
             </div>
-
-            {/* Sales History Overlay */}
-            {showHistoryOverlay && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-[#12101a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-                        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                            <h3 className="font-bold text-white">Recent Sales History</h3>
-                            <button onClick={() => setShowHistoryOverlay(false)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-4 max-h-[60vh] overflow-y-auto">
-                            {overlayLoading ? (
-                                <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
-                                    <RefreshCw className="w-6 h-6 animate-spin" />
-                                    <p>Fetching Transactions...</p>
-                                </div>
-                            ) : salesHistory?.transactions?.length > 0 ? (
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
-                                            <p className="text-xs text-gray-500 uppercase">New Avg</p>
-                                            <p className="text-xl font-bold text-white">${salesHistory.avg_price ? Math.round(salesHistory.avg_price).toLocaleString() : '-'}</p>
-                                        </div>
-                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
-                                            <p className="text-xs text-gray-500 uppercase">Sales Found</p>
-                                            <p className="text-xl font-bold text-white">{salesHistory.transactions.length}</p>
-                                        </div>
-                                    </div>
-                                    <table className="w-full text-sm text-left">
-                                        <thead>
-                                            <tr className="text-gray-500 text-xs uppercase border-b border-white/5">
-                                                <th className="pb-2">Date</th>
-                                                <th className="pb-2 text-right">Price</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-white/5">
-                                            {salesHistory.transactions.slice(0, 15).map((tx, i) => (
-                                                <tr key={i} className="text-gray-300">
-                                                    <td className="py-2">{new Date(tx.date).toLocaleDateString()}</td>
-                                                    <td className="py-2 text-right font-mono">${Math.round(tx.price).toLocaleString()}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    <p>No sales history found for this item.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Backdrop for Inspection Panel */}
-            {selectedItem && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
-                    onClick={() => setSelectedItem(null)}
-                />
-            )}
-        </div>
-    );
+            );
 }
