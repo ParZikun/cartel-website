@@ -139,43 +139,55 @@ export default function AdminPage() {
                         />
                     </div>
 
-                    <select
-                        value={filters.grading_company}
-                        onChange={(e) => setFilters(prev => ({ ...prev, grading_company: e.target.value }))}
-                        className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none"
-                    >
-                        <option value="">All Companies</option>
-                        <option value="PSA">PSA</option>
-                        <option value="BGS">BGS</option>
-                        <option value="CGC">CGC</option>
-                    </select>
+                    {/* Company Filter */}
+                    <div className="relative">
+                        <select
+                            value={filters.grading_company}
+                            onChange={(e) => setFilters(prev => ({ ...prev, grading_company: e.target.value }))}
+                            className="appearance-none pl-4 pr-10 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none focus:border-accent-gold/50 cursor-pointer hover:bg-white/5 transition-colors"
+                        >
+                            <option value="">All Companies</option>
+                            <option value="PSA">PSA</option>
+                            <option value="BGS">BGS</option>
+                            <option value="CGC">CGC</option>
+                        </select>
+                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none rotate-90" />
+                    </div>
 
-                    <select
-                        value={filters.category}
-                        onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                        className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none"
-                    >
-                        <option value="">All Categories</option>
-                        <option value="AUTOBUY">Autobuy</option>
-                        <option value="GOOD">Good</option>
-                        <option value="OK">OK</option>
-                        <option value="SKIP">Skip</option>
-                        <option value="NEW">New</option>
-                    </select>
+                    {/* Category Filter */}
+                    <div className="relative">
+                        <select
+                            value={filters.category}
+                            onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                            className="appearance-none pl-4 pr-10 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none focus:border-accent-gold/50 cursor-pointer hover:bg-white/5 transition-colors"
+                        >
+                            <option value="">All Categories</option>
+                            <option value="AUTOBUY">Autobuy</option>
+                            <option value="GOOD">Good</option>
+                            <option value="OK">OK</option>
+                            <option value="SKIP">Skip</option>
+                            <option value="NEW">New</option>
+                        </select>
+                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none rotate-90" />
+                    </div>
 
-                    <select
-                        value={filters.is_listed}
-                        onChange={(e) => setFilters(prev => ({ ...prev, is_listed: e.target.value }))}
-                        className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none"
-                    >
-                        <option value="all">Status: All</option>
-                        <option value="true">Active Only</option>
-                        <option value="false">Unlisted Only</option>
-                    </select>
+                    {/* Status Filter */}
+                    <div className="relative">
+                        <select
+                            value={filters.is_listed}
+                            onChange={(e) => setFilters(prev => ({ ...prev, is_listed: e.target.value }))}
+                            className="appearance-none pl-4 pr-10 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:outline-none focus:border-accent-gold/50 cursor-pointer hover:bg-white/5 transition-colors"
+                        >
+                            <option value="all">Status: All</option>
+                            <option value="true">Active Only</option>
+                            <option value="false">Unlisted Only</option>
+                        </select>
+                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none rotate-90" />
+                    </div>
 
                     <button
                         onClick={() => { setFilters({ category: '', grading_company: '', is_listed: 'true' }); setSearchQuery(''); }}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        className="p-2 text-gray-400 hover:text-white transition-colors border border-transparent hover:border-white/10 rounded-lg"
                         title="Reset Filters"
                     >
                         <X className="w-4 h-4" />
