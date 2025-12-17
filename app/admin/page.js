@@ -462,71 +462,72 @@ export default function AdminPage() {
                                 </div>
                             </div>
                         </div>
-                )}
                     </div>
-
-            {/* Sales History Overlay */}
-                {showHistoryOverlay && (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                        <div className="bg-[#12101a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                                <h3 className="font-bold text-white">Recent Sales History</h3>
-                                <button onClick={() => setShowHistoryOverlay(false)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="p-4 max-h-[60vh] overflow-y-auto">
-                                {overlayLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
-                                        <RefreshCw className="w-6 h-6 animate-spin" />
-                                        <p>Fetching Transactions...</p>
-                                    </div>
-                                ) : salesHistory?.transactions?.length > 0 ? (
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                            <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
-                                                <p className="text-xs text-gray-500 uppercase">New Avg</p>
-                                                <p className="text-xl font-bold text-white">${salesHistory.avg_price ? Math.round(salesHistory.avg_price).toLocaleString() : '-'}</p>
-                                            </div>
-                                            <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
-                                                <p className="text-xs text-gray-500 uppercase">Sales Found</p>
-                                                <p className="text-xl font-bold text-white">{salesHistory.transactions.length}</p>
-                                            </div>
-                                        </div>
-                                        <table className="w-full text-sm text-left">
-                                            <thead>
-                                                <tr className="text-gray-500 text-xs uppercase border-b border-white/5">
-                                                    <th className="pb-2">Date</th>
-                                                    <th className="pb-2 text-right">Price</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-white/5">
-                                                {salesHistory.transactions.slice(0, 15).map((tx, i) => (
-                                                    <tr key={i} className="text-gray-300">
-                                                        <td className="py-2">{new Date(tx.date).toLocaleDateString()}</td>
-                                                        <td className="py-2 text-right font-mono">${Math.round(tx.price).toLocaleString()}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <p>No sales history found for this item.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Backdrop for Inspection Panel */}
-                {selectedItem && (
-                    <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
-                        onClick={() => setSelectedItem(null)}
-                    />
                 )}
             </div>
-            );
+
+            {/* Sales History Overlay */}
+            {showHistoryOverlay && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-[#12101a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+                        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                            <h3 className="font-bold text-white">Recent Sales History</h3>
+                            <button onClick={() => setShowHistoryOverlay(false)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 max-h-[60vh] overflow-y-auto">
+                            {overlayLoading ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
+                                    <RefreshCw className="w-6 h-6 animate-spin" />
+                                    <p>Fetching Transactions...</p>
+                                </div>
+                            ) : salesHistory?.transactions?.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                                            <p className="text-xs text-gray-500 uppercase">New Avg</p>
+                                            <p className="text-xl font-bold text-white">${salesHistory.avg_price ? Math.round(salesHistory.avg_price).toLocaleString() : '-'}</p>
+                                        </div>
+                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                                            <p className="text-xs text-gray-500 uppercase">Sales Found</p>
+                                            <p className="text-xl font-bold text-white">{salesHistory.transactions.length}</p>
+                                        </div>
+                                    </div>
+                                    <table className="w-full text-sm text-left">
+                                        <thead>
+                                            <tr className="text-gray-500 text-xs uppercase border-b border-white/5">
+                                                <th className="pb-2">Date</th>
+                                                <th className="pb-2 text-right">Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {salesHistory.transactions.slice(0, 15).map((tx, i) => (
+                                                <tr key={i} className="text-gray-300">
+                                                    <td className="py-2">{new Date(tx.date).toLocaleDateString()}</td>
+                                                    <td className="py-2 text-right font-mono">${Math.round(tx.price).toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    <p>No sales history found for this item.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Backdrop for Inspection Panel */}
+            {selectedItem && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55]"
+                    onClick={() => setSelectedItem(null)}
+                />
+            )}
+        </div>
+    );
 }
