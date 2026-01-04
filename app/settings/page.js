@@ -350,50 +350,57 @@ export default function SettingsPage() {
                     <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
                         <Percent className="w-5 h-5 text-blue-400" />
                     </div>
-                    Snipe Thresholds
+                    Snipe Thresholds (Logic Explainer)
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Gold Tier */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-yellow-400">Gold Tier Discount</label>
-                        <div className="relative group/input">
-                            <input
-                                type="number"
-                                value={settings.gold_discount_percent}
-                                onChange={(e) => handleChange('gold_discount_percent', parseInt(e.target.value))}
-                                className="w-full bg-black/40 border border-yellow-500/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500/50 transition-colors font-mono group-hover/input:border-yellow-500/30"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                <div className="bg-black/20 rounded-xl p-6 border border-white/5 space-y-4">
+                    <div className="flex items-start gap-4 p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                        <div className="p-2 rounded-full bg-yellow-500/10 text-yellow-500 mt-1">
+                            <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h3 className="text-yellow-500 font-bold text-lg">Gold Tier (AUTOBUY)</h3>
+                            <p className="text-gray-300 text-sm mt-1">
+                                <span className="text-white font-bold">Criteria:</span> &gt;30% Discount AND &gt;75% Confidence
+                            </p>
+                            <p className="text-gray-400 text-xs mt-2">
+                                Action: Instant Auto-Buy + Admin DM + User Notification
+                            </p>
                         </div>
                     </div>
 
-                    {/* Red Tier */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-red-400">Red Tier Discount</label>
-                        <div className="relative group/input">
-                            <input
-                                type="number"
-                                value={settings.red_discount_percent}
-                                onChange={(e) => handleChange('red_discount_percent', parseInt(e.target.value))}
-                                className="w-full bg-black/40 border border-red-500/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors font-mono group-hover/input:border-red-500/30"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                    <div className="flex items-start gap-4 p-4 rounded-lg bg-red-500/5 border border-red-500/10">
+                        <div className="p-2 rounded-full bg-red-500/10 text-red-500 mt-1">
+                            <Bell className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <h3 className="text-red-500 font-bold text-lg">Red Tier (GOOD)</h3>
+                            <p className="text-gray-300 text-sm mt-1">
+                                <span className="text-white font-bold">Criteria:</span> 20-30% Discount
+                            </p>
+                            <p className="text-gray-400 text-xs mt-2">
+                                Action: High Priority Alerts + Admin DM
+                            </p>
                         </div>
                     </div>
 
-                    {/* Blue Tier */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-sky-400">Blue Tier Discount</label>
-                        <div className="relative group/input">
-                            <input
-                                type="number"
-                                value={settings.blue_discount_percent}
-                                onChange={(e) => handleChange('blue_discount_percent', parseInt(e.target.value))}
-                                className="w-full bg-black/40 border border-sky-500/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500/50 transition-colors font-mono group-hover/input:border-sky-500/30"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                    <div className="flex items-start gap-4 p-4 rounded-lg bg-sky-500/5 border border-sky-500/10">
+                        <div className="p-2 rounded-full bg-sky-500/10 text-sky-500 mt-1">
+                            <CheckCircle className="w-4 h-4" />
                         </div>
+                        <div>
+                            <h3 className="text-sky-500 font-bold text-lg">Blue Tier (OK)</h3>
+                            <p className="text-gray-300 text-sm mt-1">
+                                <span className="text-white font-bold">Criteria:</span> 15-20% Discount
+                            </p>
+                            <p className="text-gray-400 text-xs mt-2">
+                                Action: Channel Notifications Only
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-white/5 rounded-lg text-xs text-gray-500 text-center italic border border-white/5">
+                        * Values are currently hardcoded for system stability. Future updates will make these configurable.
                     </div>
                 </div>
             </section>

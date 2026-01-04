@@ -28,31 +28,31 @@ export default function Home() {
     return () => clearInterval(priceInterval);
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchListings = async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const response = await fetch(`${API_URL}/api/get-listings`);
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`API Error: ${response.status} - ${errorText}`);
-        }
-        const data = await response.json();
-        setListings(data);
-      } catch (e) {
-        setError(e.message);
-        toast.error('Failed to load listings', {
-          description: e.message
-        });
-      } finally {
-        setLoading(false);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/get-listings`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
-    };
+      const data = await response.json();
+      setListings(data);
+    } catch (e) {
+      setError(e.message);
+      toast.error('Failed to load listings', {
+        description: e.message
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
+  useEffect(() => {
+    fetchListings();
   }, []);
 
   // Debounced search
@@ -124,6 +124,8 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         toast.success(data.message); // Server now returns "Recheck ... complete. Found X new deals."
+        // REFRESH LISTINGS
+        await fetchListings();
       } else {
         const err = await res.text();
         throw new Error(err);

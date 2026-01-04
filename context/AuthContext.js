@@ -25,16 +25,49 @@ export const AuthProvider = ({ children }) => {
 
         if (storedToken && storedUser) {
             try {
+                const parsedUser = JSON.parse(storedUser);
                 setToken(storedToken);
-                setUser(JSON.parse(storedUser));
+                setUser(parsedUser);
                 setIsAuthenticated(true);
+
+                // Validate Session Immediately
+                // We use a non-blocking fetch here. If it fails with 401, authFetch handles logout.
+                // We don't use authFetch helper directly inside useEffect to avoid dependency cycles if not careful,
+                // but here it is defined below. 
+                // Actually, authFetch is defined in the component scope, so we can't use it easily in the effect 
+                // unless we move it or use a raw fetch.
+                // Let's use raw fetch but replicate the check.
+
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                fetch(`${API_URL}/api/user/status/${parsedUser.wallet_address}`, {
+                    headers: { 'Authorization': `Bearer ${storedToken}` }
+                })
+                    .then(res => {
+                        if (res.status === 401) {
+                            console.warn("Session check failed (401). Logging out.");
+                            // We can't call logout() directly here easily if it depends on router which is outside?
+                            // Logout uses 'router'. 'router' is available.
+                            // But logout function is defined below.
+                            // We need to define logout logic or move it up.
+                            // Simplest: Just clear storage and state here if 401.
+                            localStorage.removeItem("cc_auth_token");
+                            localStorage.removeItem("cc_user");
+                            setToken(null);
+                            setUser(null);
+                            setIsAuthenticated(false);
+                            // router.push('/'); // Optional, maybe we want to stay on landing
+                        }
+                    })
+                    .catch(err => console.error("Session check error:", err));
+
             } catch (e) {
                 console.error("Failed to parse stored user", e);
-                logout();
+                localStorage.removeItem("cc_auth_token");
+                localStorage.removeItem("cc_user");
             }
         }
         setIsLoading(false);
-    }, []);
+    }, [router]);
 
     // Monitor Wallet Disconnect
     useEffect(() => {
